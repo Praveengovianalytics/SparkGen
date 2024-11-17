@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "genai-cookiecutter"
+version = "0.1.0"
+description = "genai-cookiecutter"
+authors = ["Praveen Govindaraj <38414524+Praveengovianalytics@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+cookiecutter = "^2.6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
