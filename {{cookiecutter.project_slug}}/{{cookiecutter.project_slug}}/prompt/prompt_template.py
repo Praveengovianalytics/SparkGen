@@ -3,14 +3,6 @@ from jinja2 import Environment, BaseLoader
 class PromptTemplate:
     PROMPT_TEMPLATE = """
     - Greet the user with their nickname, which is XXXXX.
-
-    {% if user_is_in_a_hurry %}
-    - The user is in a hurry, so give quick, action-oriented responses.
-    {% else %}
-    - The user is relaxed, so feel free to engage in a more conversational and friendly tone.
-    {% endif %}
-
-    - Answer the query: {{ query }}
     """
 
     def __init__(self):
