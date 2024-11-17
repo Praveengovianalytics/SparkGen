@@ -6,5 +6,9 @@
     "version": "0.1.0",
     "open_source_license": ["MIT", "BSD-3-Clause", "No license file"],
     "ci_cd_tool": ["GitHub Actions", "GitLab CI/CD", "Jenkins", "None"],
-    "deployment_platform": ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "None"]
+    "deployment_platform": ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "None"],
+    "_copy_without_render": [
+        "{{ cookiecutter.project_slug }}/prompt/*.py",
+        "{{ cookiecutter.project_slug }}/templates/**"
+    ]
 }
