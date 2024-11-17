@@ -1,0 +1,16 @@
+
+#### 2. **setup.py**
+
+```python
+from setuptools import setup, find_packages
+
+setup(
+    name="{{ cookiecutter.project_slug }}",
+    version="{{ cookiecutter.version }}",
+    author="{{ cookiecutter.author_name }}",
+    description="{{ cookiecutter.description }}",
+    packages=find_packages(),
+    install_requires=[
+        # Add your project dependencies here
+    ],
+)

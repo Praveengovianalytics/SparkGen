@@ -1,0 +1,10 @@
+{
+    "project_name": "My GenAI Project",
+    "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
+    "author_name": "Your Name",
+    "description": "A short description of the project.",
+    "version": "0.1.0",
+    "open_source_license": ["MIT", "BSD-3-Clause", "No license file"],
+    "ci_cd_tool": ["GitHub Actions", "GitLab CI/CD", "Jenkins", "None"],
+    "deployment_platform": ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "None"]
+}
