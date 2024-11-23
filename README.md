@@ -1,5 +1,8 @@
+![image](https://github.com/user-attachments/assets/d442f52b-4c3d-4d50-99df-1bdf130e018d)
+
+
 # SparkGen ✨
-A Cookiecutter template for rapidly creating robust, scalable, and modular Generative AI projects with best practices in mind.
+A GenAI Cookiecutter template for rapidly creating robust, scalable, and modular Generative AI projects with best practices in mind.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Praveengovianalytics/SparkGen)](https://github.com/Praveengovianalytics/SparkGen/issues)
