@@ -80,7 +80,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 
 Generate a new project using the GenAI Cookiecutter template:
 ```bash
-cookiecutter https://github.com/yourusername/SparkGen.git
+cookiecutter https://github.com/Praveengovianalytics/SparkGen.git
 ```
 You will be prompted to enter various details:
 - `project_name`: The name of your new project.
