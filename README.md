@@ -317,4 +317,4 @@ See the `CHANGELOG.md` file for details on version changes.
 
 ---
 
-By using GenAI Cookiecutter, you're accelerating your Gen AI development with a solid foundation and best practices. 🚀 Happy coding!
+By using SparkGen ✨, you're accelerating your Gen AI development with a solid foundation and best practices. 🚀 Happy coding!
