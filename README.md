@@ -290,7 +290,7 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 - **Author**: Praveen Govindaraj   
 - **Email**: praveengovi@gmail.com
 - **GitHub**: [link](https://github.com/Praveengovianalytics)
-- **Project Repository**: [GenAI Cookiecutter](https://github.com/Praveengovianalytics/SparkGen)
+- **Project Repository**: [SparkGen](https://github.com/Praveengovianalytics/SparkGen)
 
 ---
 
