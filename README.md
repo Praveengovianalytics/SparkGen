@@ -21,9 +21,9 @@ A Cookiecutter template for rapidly creating robust, scalable, and modular Gener
 
 ---
 ## ⚛ Introduction
-SparkGen✨ is GenAI Cookiecutter is an open-source Cookiecutter template designed to streamline the creation of Generative AI projects. It provides a comprehensive and modular project structure that integrates best practices in software development, deployment, and responsible AI considerations.
+SparkGen✨  is an open-source GenAI Cookiecutter template designed to streamline the creation of Generative AI projects. It provides a comprehensive and modular project structure that integrates best practices in software development, deployment, and responsible AI considerations.
 
-Whether you're building a conversational agent, an AI-powered application, or experimenting with large language models, this template serves as a solid foundation to accelerate your development process.
+Whether you're building a conversational agent, multi-model agent, AI-powered application, or experimenting with large language models, this template provides a solid foundation to accelerate your development process.
 
 ---
 ## :fire: Quickstart
