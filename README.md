@@ -1,6 +1,70 @@
 # SparkGen ✨
 A Cookiecutter template for rapidly creating robust, scalable, and modular Generative AI projects with best practices in mind.
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Build Status](https://img.shields.io/travis/user/repo.svg)](https://github.com/Praveengovianalytics/SparkGen)
+[![GitHub issues](https://img.shields.io/github/issues/Praveengovianalytics/falcon-evaluate)](https://github.com/Praveengovianalytics/SparkGen/issues)
+[![GitHub release](https://img.shields.io/github/release/Praveengovianalytics/falcon-evaluate)](https://github.com/Praveengovianalytics/SparkGen/releases)
+<a href="https://colab.research.google.com/drive/1h9E0Q5Fema9TkOiv0asyaSaHin1R0UN5?usp=sharing">
+<img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg">
+[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/Praveengovianalytics/falcon-evaluate)
+</a>
+<a href="https://www.python.org/">
+<img alt="Build" src="https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=green">
+</a>
+
+<h4 align="center">
+    <p>
+        <a href="#shield-installation">Installation</a> |
+        <a href="#fire-quickstart">Quickstart</a> |
+    <p>
+</h4>
+
+---
+## ⚛ Introduction
+SparkGen✨ is GenAI Cookiecutter is an open-source Cookiecutter template designed to streamline the creation of Generative AI projects. It provides a comprehensive and modular project structure that integrates best practices in software development, deployment, and responsible AI considerations.
+
+Whether you're building a conversational agent, an AI-powered application, or experimenting with large language models, this template serves as a solid foundation to accelerate your development process.
+
+---
+## :fire: Quickstart
+
+### 🔍 Prerequisites
+- Python 3.9+
+- Cookiecutter: For generating projects from templates.
+- Poetry: For dependency management.
+- Git
+- Docker (optional): For containerization.
+- Kubernetes (optional): For orchestration.
+
+## :shield: Installation
+
+**Install Cookiecutter**
+```bash
+pip install cookiecutter
+```
+
+**Install Poetry**
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+### ⚙️ Generating a New Project
+
+Generate a new project using the GenAI Cookiecutter template:
+```bash
+cookiecutter https://github.com/Praveengovianalytics/SparkGen.git
+```
+You will be prompted to enter various details:
+- `project_name`: The name of your new project.
+- `project_slug`: [Automatically generated based on `project_name`]
+- `author_name`: Your name.
+- `description`: A short description of your project.
+- `version`: Initial version number.
+- `open_source_license`: Choose a license.
+- `ci_cd_tool`: Choose a CI/CD tool (e.g., GitHub Actions).
+- `deployment_platform`: Choose a deployment platform (e.g., Docker, Kubernetes).
+
 ---
 
 ## 🔬 Table of Contents
@@ -51,46 +115,6 @@ Whether you're building a conversational agent, an AI-powered application, or ex
 - **Responsible AI Modules**: Components for bias detection, privacy preservation, and explainability.
 - **Docker and Kubernetes Support**: Containerization and orchestration for scalable deployments.
 - **Poetry for Dependency Management**: Simplified dependency management and virtual environment handling.
-
----
-
-## 🏃‍♂️ Quickstart
-
-### 🔍 Prerequisites
-- Python 3.9+
-- Cookiecutter: For generating projects from templates.
-- Poetry: For dependency management.
-- Git
-- Docker (optional): For containerization.
-- Kubernetes (optional): For orchestration.
-
-### 📝 Installation
-
-**Install Cookiecutter**
-```bash
-pip install cookiecutter
-```
-
-**Install Poetry**
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-### ⚙️ Generating a New Project
-
-Generate a new project using the GenAI Cookiecutter template:
-```bash
-cookiecutter https://github.com/Praveengovianalytics/SparkGen.git
-```
-You will be prompted to enter various details:
-- `project_name`: The name of your new project.
-- `project_slug`: [Automatically generated based on `project_name`]
-- `author_name`: Your name.
-- `description`: A short description of your project.
-- `version`: Initial version number.
-- `open_source_license`: Choose a license.
-- `ci_cd_tool`: Choose a CI/CD tool (e.g., GitHub Actions).
-- `deployment_platform`: Choose a deployment platform (e.g., Docker, Kubernetes).
 
 ---
 
