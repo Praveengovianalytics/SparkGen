@@ -306,7 +306,7 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 2. **Can I use this project for commercial purposes?**
    - Yes, this project is licensed under the MIT License, which allows commercial use. Refer to the `LICENSE` file for details.
 3. **How do I report bugs or request features?**
-   - Open an issue on the [GitHub Issues](https://github.com/yourusername/genai-cookiecutter/issues) page.
+   - Open an issue on the [GitHub Issues](https://github.com/Praveengovianalytics/SparkGen/issues) page.
 4. **How can I extend the template to suit my needs?**
    - Modify the template files in the generated project or customize the Cookiecutter template itself by forking the repository.
 
