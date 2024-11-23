@@ -32,7 +32,7 @@ A Cookiecutter template for rapidly creating robust, scalable, and modular Gener
 ---
 
 ## ⚛ Introduction
-GenAI Cookiecutter is an open-source Cookiecutter template designed to streamline the creation of Generative AI projects. It provides a comprehensive and modular project structure that integrates best practices in software development, deployment, and responsible AI considerations.
+SparkGen✨ is GenAI Cookiecutter is an open-source Cookiecutter template designed to streamline the creation of Generative AI projects. It provides a comprehensive and modular project structure that integrates best practices in software development, deployment, and responsible AI considerations.
 
 Whether you're building a conversational agent, an AI-powered application, or experimenting with large language models, this template serves as a solid foundation to accelerate your development process.
 
@@ -80,7 +80,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 
 Generate a new project using the GenAI Cookiecutter template:
 ```bash
-cookiecutter https://github.com/yourusername/genai-cookiecutter.git
+cookiecutter https://github.com/yourusername/SparkGen.git
 ```
 You will be prompted to enter various details:
 - `project_name`: The name of your new project.
