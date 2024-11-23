@@ -1,4 +1,4 @@
-# GenAI Cookiecutter ✨
+# SparkGen ✨
 A Cookiecutter template for rapidly creating robust, scalable, and modular Generative AI projects with best practices in mind.
 
 ---
