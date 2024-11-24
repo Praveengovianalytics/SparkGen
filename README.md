@@ -4,8 +4,6 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/Praveengovianalytics/SparkGen)](https://github.com/Praveengovianalytics/SparkGen/issues)
 [![GitHub release](https://img.shields.io/github/release/Praveengovianalytics/SparkGen)](https://github.com/Praveengovianalytics/SparkGen/releases)
-<a href="https://colab.research.google.com/drive/1h9E0Q5Fema9TkOiv0asyaSaHin1R0UN5?usp=sharing">
-<img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg">
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/Praveengovianalytics/SparkGen/releases)
 </a>
 <a href="https://www.python.org/">
