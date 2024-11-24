@@ -7,9 +7,9 @@ on:
       - main
 
 env:
-  DEV_ENV: "dev"
-  TEST_ENV: "test"
-  PROD_ENV: "main"
+  DEV_ENV: dev
+  TEST_ENV: test
+  PROD_ENV: main
 
 jobs:
   deploy_dev:
@@ -25,7 +25,7 @@ jobs:
       - name: Install Dependencies
         run: poetry install
       - name: Deploy to Dev
-        run: poetry run python deploy_model.py --env ${{ env.DEV_ENV }}
+        run: poetry run python deploy_model.py --env=${{ env.DEV_ENV }}
 
   deploy_test:
     name: Deploy to Test Environment
@@ -40,7 +40,7 @@ jobs:
       - name: Install Dependencies
         run: poetry install
       - name: Deploy to Test
-        run: poetry run python deploy_model.py --env ${{ env.TEST_ENV }}
+        run: poetry run python deploy_model.py --env=${{ env.TEST_ENV }}
 
   deploy_main:
     name: Deploy to Production Environment
@@ -56,7 +56,7 @@ jobs:
       - name: Install Dependencies
         run: poetry install
       - name: Deploy to Production
-        run: poetry run python deploy_model.py --env ${{ env.PROD_ENV }}
+        run: poetry run python deploy_model.py --env=${{ env.PROD_ENV }}
 
   post_deployment:
     name: Post-Deployment Checks
