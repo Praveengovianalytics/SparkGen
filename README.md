@@ -321,7 +321,36 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ---
 
 ## ⌛ Change Log
-See the `CHANGELOG.md` file for details on version changes.
+
+To be Updated
+
+---
+## 🛤️ Roadmap
+
+- [x] **Q4 2024**
+  - [x] Launch SparkGen v0.1 with core features, including modular project structure, LLM integration, and Responsible AI modules.
+  - [ ] Publish detailed documentation and examples to facilitate adoption.
+  - [ ] Detail examples for RAG , Agentic workflows and Agentops
+
+- [ ] **Q1 2025**
+  - [ ] Introduce pre-configured deployment templates for popular cloud platforms (AWS, Azure, GCP).
+  - [ ] Expand Responsible AI capabilities with additional modules for ethical compliance.
+  - [ ] Incorporate advanced CI/CD templates for seamless pipeline integration.
+
+- [ ] **Q2 2025**
+  - [ ] Add support for multi-agent systems and orchestration tools.
+  - [ ] Enhance embedding and vector database integration for scalability in enterprise use cases.
+  - [ ] Develop a community forum to share extensions and improvements.
+
+- [ ] **Q3 2025**
+  - [ ] Release v1.0 with enhanced memory management and new tools for prompt engineering.
+  - [ ] Provide integration guides for proprietary LLMs and APIs.
+  - [ ] Expand telemetry and monitoring features with detailed dashboards.
+
+- [ ] **Beyond Q3 2025**
+  - [ ] Focus on real-time collaboration tools for distributed AI teams.
+  - [ ] Introduce customizable UI/UX templates for AI applications.
+  - [ ] Build partnerships with academic and industry leaders to continuously evolve SparkGen.
 
 ---
 
