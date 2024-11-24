@@ -1,0 +1,89 @@
+# .github/workflows/cd.yml
+name: CD Pipeline - {{cookiecutter.project_slug}}
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DEV_ENV: "dev"
+  TEST_ENV: "test"
+  PROD_ENV: "main"
+
+jobs:
+  deploy_dev:
+    name: Deploy to Development Environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+      - name: Install Dependencies
+        run: poetry install
+      - name: Deploy to Dev
+        run: poetry run python deploy_model.py --env ${{ env.DEV_ENV }}
+
+  deploy_test:
+    name: Deploy to Test Environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+      - name: Install Dependencies
+        run: poetry install
+      - name: Deploy to Test
+        run: poetry run python deploy_model.py --env ${{ env.TEST_ENV }}
+
+  deploy_main:
+    name: Deploy to Production Environment
+    needs: [deploy_dev, deploy_test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+      - name: Install Dependencies
+        run: poetry install
+      - name: Deploy to Production
+        run: poetry run python deploy_model.py --env ${{ env.PROD_ENV }}
+
+  post_deployment:
+    name: Post-Deployment Checks
+    needs: deploy_main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+      - name: Install Dependencies
+        run: poetry install
+      - name: Run Responsible AI and Accuracy Validation
+        run: |
+          poetry run python responsible_ai_checks.py
+          poetry run python evaluate_accuracy.py --config ragas_config.yaml
+
+  notify:
+    name: Notify Team
+    needs: post_deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        with:
+          status: ${{ job.status }}
+          message: "Deployment completed for {{cookiecutter.project_slug}} in ${{ env.PROD_ENV }}!"
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
