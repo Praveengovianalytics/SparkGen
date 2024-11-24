@@ -12,7 +12,26 @@ Detailed documentation is available in the `docs/` directory.
 
 ## 🛠️ Installation
 
-```bash
-pip install -r requirements.txt
+### Create a virtual environment
 
-poetry install
+```bash
+
+Step 1 - 
+python -m venv venv
+
+Step 2 - 
+cd venv/Scripts&&Activate  ( Windows )
+source venv/bin/activate ( Mac / Linux )
+
+Step 3 -
+pip install poetry
+
+step 4 -
+poetry init
+
+Give the project name as same project slug
+
+step 5 -
+
+poetry add library_1 library_2 library_3
+
