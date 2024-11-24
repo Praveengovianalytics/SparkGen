@@ -25,6 +25,14 @@ SparkGen✨  is an open-source GenAI accelerator template designed to streamline
 
 Whether you're building a conversational agent, multi-model agent, AI-powered application, or experimenting with large language models, this template provides a solid foundation to accelerate your development process.
 
+# Story of SparkGen 🎸✨
+
+## How SparkGen Was Created
+
+*The story of **SparkGen** began in Bangkok, during a recent business trip that led me to the vibrant **Hard Rock Cafe**. Amidst the electrifying music and creative energy, I reflected on how small sparks of inspiration can create extraordinary compositions—whether in music or technology.*
+*Sitting in that dynamic atmosphere, it struck me: what if we had a "hard rock" foundation for Generative AI? A toolkit designed to ignite innovation and help teams seamlessly create impactful AI solutions. By the end of the night, the name **SparkGen** was developed—a fusion of creativity, simplicity, and the generative power of AI.*
+*SparkGen is built to inspire, accelerate, and empower AI creators to turn ideas into reality. Just like music brings people together to create something extraordinary, SparkGen helps you compose your own AI ideas to reality.*
+
 ---
 ## :fire: Quickstart
 
