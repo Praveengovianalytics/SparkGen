@@ -160,11 +160,11 @@ Detail how data flows through the system, including:
 
 ## 13. Contact Details
 
-| **Role**               | **Name**           | **Email**                  | **Phone**        |
+| **Role**               | **Name**           | **Email**                  | **Department**        |
 |-------------------------|--------------------|----------------------------|------------------|
-| Project Manager         | [Name]            | [Email]                    | [Phone]          |
-| Product Owner           | [Name]            | [Email]                    | [Phone]          |
-| AI Engineer             | [Name]            | [Email]                    | [Phone]          |
+| Project Manager         | [Name]            | [Email]                    | [Department]          |
+| Product Owner           | [Name]            | [Email]                    | [Department]          |
+| AI Engineer             | [Name]            | [Email]                    | [Department]          |
 
 ---
 
