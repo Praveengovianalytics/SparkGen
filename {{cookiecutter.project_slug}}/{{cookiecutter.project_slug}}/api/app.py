@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from {{ cookiecutter.project_slug }}.agents.agent import Agent, RouterManager
 from {{ cookiecutter.project_slug }}.config.config_loader import ConfigLoader
+from {{ cookiecutter.project_slug }}.guardrails.policies import build_default_guardrails
 from {{ cookiecutter.project_slug }}.llms.base_llm import BaseLLM
 from {{ cookiecutter.project_slug }}.orchestration import patterns
 from {{ cookiecutter.project_slug }}.prompt.prompt_template import PromptTemplate
@@ -26,6 +27,7 @@ class InvokeRequest(BaseModel):
 
 
 def build_single_agent(config):
+    guardrails = build_default_guardrails(config)
     llm = BaseLLM(
         {
             "api_key": config["api_key"],
@@ -42,10 +44,12 @@ def build_single_agent(config):
         history=[],
         output_parser=None,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+        guardrails=guardrails,
     )
 
 
 def build_router_pattern(config):
+    guardrails = build_default_guardrails(config)
     llm, prompt = BaseLLM(
         {
             "api_key": config["api_key"],
@@ -61,6 +65,7 @@ def build_router_pattern(config):
         history=["You are a research specialist."],
         output_parser=None,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+        guardrails=guardrails,
     )
     coding_agent = Agent(
         llm=llm,
@@ -69,6 +74,7 @@ def build_router_pattern(config):
         history=["You write code and return patches."],
         output_parser=None,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+        guardrails=guardrails,
     )
     router = RouterManager(agents=[research_agent, coding_agent])
     return patterns.RouterManagerPattern(router=router)

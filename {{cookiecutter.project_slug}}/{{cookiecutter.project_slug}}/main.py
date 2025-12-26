@@ -22,6 +22,7 @@ from {{ cookiecutter.project_slug }}.memory.memory import ChatMemory
 from {{ cookiecutter.project_slug }}.telemetry.telemetry import Telemetry
 from {{ cookiecutter.project_slug }}.config.config_loader import ConfigLoader
 from {{ cookiecutter.project_slug }}.protocols.a2a_protocol import AgentToAgentProtocol
+from {{ cookiecutter.project_slug }}.guardrails.policies import build_default_guardrails
 
 
 def build_base_components(config):
@@ -35,11 +36,12 @@ def build_base_components(config):
     )
     prompt = PromptTemplate()
     memory = ChatMemory()
-    return llm, prompt, memory
+    guardrails = build_default_guardrails(config)
+    return llm, prompt, memory, guardrails
 
 
 def build_single_agent_flow(config):
-    llm, prompt, memory = build_base_components(config)
+    llm, prompt, memory, guardrails = build_base_components(config)
     agent = Agent(
         llm=llm,
         tools=tools,
@@ -47,12 +49,13 @@ def build_single_agent_flow(config):
         history=[],
         output_parser=lambda resp: resp,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+        guardrails=guardrails,
     )
     return agent
 
 
 def build_router_manager_flow(config):
-    llm, prompt, memory = build_base_components(config)
+    llm, prompt, memory, guardrails = build_base_components(config)
 
     research_agent = Agent(
         llm=llm,
@@ -61,6 +64,7 @@ def build_router_manager_flow(config):
         history=["You are a research specialist."],
         output_parser=lambda resp: resp,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+        guardrails=guardrails,
     )
 
     coding_agent = Agent(
@@ -70,6 +74,7 @@ def build_router_manager_flow(config):
         history=["You write code and return patches."],
         output_parser=lambda resp: resp,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+        guardrails=guardrails,
     )
 
     router = RouterManager(agents=[research_agent, coding_agent])

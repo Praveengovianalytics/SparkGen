@@ -34,4 +34,6 @@ class ConfigLoader:
             "langfuse_host": os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
             "langfuse_public_key": os.getenv("LANGFUSE_PUBLIC_KEY", "your-public-key"),
             "langfuse_secret_key": os.getenv("LANGFUSE_SECRET_KEY", "your-secret-key"),
+            "guardrail_banned_terms": os.getenv("GUARDRAIL_BANNED_TERMS", ""),
+            "guardrail_max_output_len": os.getenv("GUARDRAIL_MAX_OUTPUT_LEN", "2000"),
         }

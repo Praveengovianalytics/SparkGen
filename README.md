@@ -82,6 +82,53 @@ If you select **FastAPI**, the generated project includes `api/app.py` with
 uvicorn {{cookiecutter.project_slug}}.api.app:app --reload
 ```
 
+### 🧭 Usage Steps
+1. **Generate** a project with Cookiecutter.
+2. **Install deps** inside the generated folder:
+   ```bash
+   cd your_project_slug
+   poetry install
+   ```
+3. **Run CLI entrypoint** (single-agent by default):
+   ```bash
+   poetry run python your_project_slug/main.py
+   ```
+4. **Run FastAPI service** (if selected):
+   ```bash
+   uvicorn your_project_slug.api.app:app --reload
+   ```
+5. **Call the API**:
+   ```bash
+   curl -X POST http://localhost:8000/agent/invoke -H "Content-Type: application/json" -d '{"query":"hello","pattern":"single-agent"}'
+   ```
+6. **Switch orchestration patterns** by changing `pattern` (e.g., `router-manager`, `sequential`, `planner-executor`, `hierarchical`, `broadcast-reduce`, `critic-review`, `tool-first`).
+
+### 🗂️ Updated Project Structure (key files)
+```
+your_project_slug/
+├── api/
+│   └── app.py               # FastAPI surface
+├── agents/                  # agent definitions
+├── prompt/                  # prompt templates
+├── llms/                    # LLM wrappers
+├── tools/                   # tool specs/functions
+├── memory/                  # memory abstractions
+├── telemetry/               # telemetry hooks
+├── orchestration/
+│   └── patterns.py          # 7 orchestration scaffolds
+├── guardrails/
+│   └── policies.py          # central guardrail manager and policies
+├── protocols/
+│   └── a2a_protocol.py      # agent-to-agent messaging
+├── connectors/
+│   └── mcp_client.py        # MCP connectivity stub
+├── docs/
+│   ├── context_engineering_spec.md
+│   └── orchestration_patterns.md
+├── tests/                   # unit tests for agents/protocols
+└── main.py                  # CLI entrypoint (single/router/planner)
+```
+
 ---
 
 ## 🔬 Table of Contents

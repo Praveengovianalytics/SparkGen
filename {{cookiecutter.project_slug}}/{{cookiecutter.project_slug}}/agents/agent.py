@@ -1,4 +1,5 @@
 from typing import List, Callable, Any, Optional
+from {{ cookiecutter.project_slug }}.guardrails.policies import GuardrailManager, GuardrailViolation
 
 
 class Agent:
@@ -16,6 +17,7 @@ class Agent:
         history: List[str],
         output_parser: Callable[[Any], Any],
         use_agents_sdk: bool = False,
+        guardrails: Optional[GuardrailManager] = None,
     ) -> None:
         self._llm = llm
         self._tools = tools
@@ -23,6 +25,7 @@ class Agent:
         self._history = history
         self._output_parser = output_parser
         self._use_agents_sdk = use_agents_sdk
+        self._guardrails = guardrails or GuardrailManager()
         self._validated_tools = self.prepare_tools()
         self._formatted_history = self.prepare_history()
         self._final_prompt = self.prepare_prompt(self._validated_tools)
@@ -55,11 +58,16 @@ class Agent:
 
     def execute(self, user_query: str) -> Any:
         """Run the agent workflow: prepare prompt, query LLM, parse result."""
+        self._guardrails.run_pre(user_query)
         if self._use_agents_sdk:
             llm_response = self._llm.agent_chat(user_query)
         else:
             llm_response = self.query_llm(self._final_prompt, user_query)
-        return self.parse_output(llm_response)
+        parsed = self.parse_output(llm_response)
+        # Apply post-guardrails on stringified content.
+        if isinstance(parsed, str):
+            self._guardrails.run_post(parsed)
+        return parsed
 
 
 class RouterManager:
