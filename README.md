@@ -56,7 +56,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 
 ### ⚙️ Generating a New Project
 
-Generate a new project using the GenAI Cookiecutter template:
+Generate a new project using the Multiagentic Cookiecutter template:
 ```bash
 cookiecutter https://github.com/Praveengovianalytics/SparkGen.git
 ```
@@ -69,6 +69,65 @@ You will be prompted to enter various details:
 - `open_source_license`: Choose a license.
 - `ci_cd_tool`: Choose a CI/CD tool (e.g., GitHub Actions).
 - `deployment_platform`: Choose a deployment platform (e.g., Docker, Kubernetes).
+- `multi_agent_mode`: Choose between router-manager, planner-builder, or single-agent.
+- `api_framework`: Pick FastAPI to bootstrap an API surface or None for CLI-first.
+- `observability`: Choose Logging only or OpenTelemetry-ready wiring.
+- `openai_agent_sdk`: Enable to scaffold OpenAI Agents SDK usage (router and planner flows can delegate to Agents).
+- MCP connectivity and A2A protocol scaffolds are included to accelerate
+  multi-agent interoperability and context sharing out of the box.
+
+If you select **FastAPI**, the generated project includes `api/app.py` with
+`/health` and `/agent/invoke` endpoints; run with:
+```bash
+uvicorn {{cookiecutter.project_slug}}.api.app:app --reload
+```
+
+### 🧭 Usage Steps
+1. **Generate** a project with Cookiecutter.
+2. **Install deps** inside the generated folder:
+   ```bash
+   cd your_project_slug
+   poetry install
+   ```
+3. **Run CLI entrypoint** (single-agent by default):
+   ```bash
+   poetry run python your_project_slug/main.py
+   ```
+4. **Run FastAPI service** (if selected):
+   ```bash
+   uvicorn your_project_slug.api.app:app --reload
+   ```
+5. **Call the API**:
+   ```bash
+   curl -X POST http://localhost:8000/agent/invoke -H "Content-Type: application/json" -d '{"query":"hello","pattern":"single-agent"}'
+   ```
+6. **Switch orchestration patterns** by changing `pattern` (e.g., `router-manager`, `sequential`, `planner-executor`, `hierarchical`, `broadcast-reduce`, `critic-review`, `tool-first`).
+
+### 🗂️ Updated Project Structure (key files)
+```
+your_project_slug/
+├── api/
+│   └── app.py               # FastAPI surface
+├── agents/                  # agent definitions
+├── prompt/                  # prompt templates
+├── llms/                    # LLM wrappers
+├── tools/                   # tool specs/functions
+├── memory/                  # memory abstractions
+├── telemetry/               # telemetry hooks
+├── orchestration/
+│   └── patterns.py          # 7 orchestration scaffolds
+├── guardrails/
+│   └── policies.py          # central guardrail manager and policies
+├── protocols/
+│   └── a2a_protocol.py      # agent-to-agent messaging
+├── connectors/
+│   └── mcp_client.py        # MCP connectivity stub
+├── docs/
+│   ├── context_engineering_spec.md
+│   └── orchestration_patterns.md
+├── tests/                   # unit tests for agents/protocols
+└── main.py                  # CLI entrypoint (single/router/planner)
+```
 
 ---
 

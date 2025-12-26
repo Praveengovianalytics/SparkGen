@@ -7,6 +7,10 @@
     "open_source_license": ["MIT", "BSD-3-Clause", "No license file"],
     "ci_cd_tool": ["GitHub Actions", "GitLab CI/CD", "Jenkins", "None"],
     "deployment_platform": ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "None"],
+    "multi_agent_mode": ["router-manager", "planner-builder", "single-agent"],
+    "api_framework": ["FastAPI", "None"],
+    "observability": ["Logging only", "OpenTelemetry-ready"],
+    "openai_agent_sdk": ["enabled", "disabled"],
     "_copy_without_render": [
         "{{ cookiecutter.project_slug }}/prompt/*.py",
         "{{ cookiecutter.project_slug }}/templates/**"
