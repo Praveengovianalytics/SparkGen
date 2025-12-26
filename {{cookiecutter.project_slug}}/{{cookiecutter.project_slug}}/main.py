@@ -1,61 +1,128 @@
-from {{ cookiecutter.project_slug }}.agents.agent import Agent
+"""Entry point for generated projects.
+
+This file now supports multiple modes:
+
+- Router-manager multi-agent: a simple router dispatches queries to multiple
+  specialist agents.
+- Planner-builder multi-agent: a future extension point for a planner that can
+  construct and execute task graphs (scaffold left for user customization).
+- Single-agent: legacy flow for minimal setups.
+
+The goal is to mirror modern multi-agent templates such as
+`neural-maze/agent-api-cookiecutter` while keeping the project beginner-friendly.
+"""
+
+from typing import List
+
+from {{ cookiecutter.project_slug }}.agents.agent import Agent, RouterManager
 from {{ cookiecutter.project_slug }}.prompt.prompt_template import PromptTemplate
 from {{ cookiecutter.project_slug }}.llms.base_llm import BaseLLM
-from {{ cookiecutter.project_slug }}.embeddings.embedder import Embedder
-from {{ cookiecutter.project_slug }}.vectordatabase.vector_store import VectorStore
-from {{ cookiecutter.project_slug }}.tools.tools import Tools
+from {{ cookiecutter.project_slug }}.tools.tools import tools
 from {{ cookiecutter.project_slug }}.memory.memory import ChatMemory
-from {{ cookiecutter.project_slug }}.callbacks.callback_handler import CallbackHandler
 from {{ cookiecutter.project_slug }}.telemetry.telemetry import Telemetry
 from {{ cookiecutter.project_slug }}.config.config_loader import ConfigLoader
-from {{ cookiecutter.project_slug }}.data_loaders.data_loader import DataLoader
-from {{ cookiecutter.project_slug }}.retrievers.retriever import Retriever
-from {{ cookiecutter.project_slug }}.reranker.reranker import Reranker
+from {{ cookiecutter.project_slug }}.protocols.a2a_protocol import AgentToAgentProtocol
 
 
+def build_base_components(config):
+    llm = BaseLLM(
+        {
+            "api_key": config["api_key"],
+            "model": config["model_name"],
+            "use_agents": config.get("openai_agent_sdk") == "enabled",
+            "agent_id": config.get("openai_agent_id"),
+        }
+    )
+    prompt = PromptTemplate()
+    memory = ChatMemory()
+    return llm, prompt, memory
 
-class AIProject:
-    def __init__(self):
-        # Initialize configuration
-        self.config = ConfigLoader().load_config()
 
-        # Initialize various components
-        self.agent_manager = Agent(self.config)
-        self.prompt_handler = PromptTemplate(self.config)
-        self.llm_integration = LLM(self.config)
-        self.embedding_handler = embedder(self.config)
-        self.vector_database = VectorStores(self.config)
-        self.tool_manager = Tools(self.config)
-        self.memory_manager = ChatMemory(self.config)
-        self.callback_manager = CallbackHandler(self.config)
-        self.telemetry_logger = Telemetry(self.config)
-        self.data_loader = DataLoader(self.config)
-        self.retriever = Retriever(self.config)
-        self.reranker = Reranker(self.config)
+def build_single_agent_flow(config):
+    llm, prompt, memory = build_base_components(config)
+    agent = Agent(
+        llm=llm,
+        tools=tools,
+        prompt=prompt.PROMPT_TEMPLATE,
+        history=[],
+        output_parser=lambda resp: resp,
+        use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+    )
+    return agent
 
-        # Log initialization
-        self.telemetry_logger.log("All components initialized successfully.")
 
-    def run(self):
-        """Main method to execute the project."""
-        self.telemetry_logger.log("Starting main workflow...")
-        # Example workflow
-        query = "What is the capital of France?"
-        context = self.memory_manager.retrieve_context(query)
-        
-        prompt = self.prompt_handler.create_prompt(query, context)
-        response = self.llm_integration.generate_response(prompt)
-        
-        embeddings = self.embedding_handler.generate_embeddings([response])
-        self.vector_database.store_embeddings(embeddings)
-        
-        candidates = self.retriever.retrieve(query)
-        reranked_results = self.reranker.rerank(query, candidates)
-        
-        self.callback_manager.execute_callbacks("on_complete", response)
-        return reranked_results
+def build_router_manager_flow(config):
+    llm, prompt, memory = build_base_components(config)
+
+    research_agent = Agent(
+        llm=llm,
+        tools=tools,
+        prompt=f"Research agent: {prompt.PROMPT_TEMPLATE}",
+        history=["You are a research specialist."],
+        output_parser=lambda resp: resp,
+        use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+    )
+
+    coding_agent = Agent(
+        llm=llm,
+        tools=tools,
+        prompt=f"Coding agent: {prompt.PROMPT_TEMPLATE}",
+        history=["You write code and return patches."],
+        output_parser=lambda resp: resp,
+        use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
+    )
+
+    router = RouterManager(agents=[research_agent, coding_agent])
+    return router
+
+
+class SimplePlanner:
+    """
+    Minimal planner scaffold that selects an agent based on declared skills.
+    """
+
+    def __init__(self, protocol: AgentToAgentProtocol, agents):
+        self.protocol = protocol
+        self.agents = agents
+        for idx, agent in enumerate(agents):
+            self.protocol.register_agent(f"agent_{idx}", ["generic"])
+
+    def plan_and_execute(self, user_query: str):
+        # Naive strategy: pick first agent that has any skill.
+        target_id = next(iter(self.protocol.registry.keys()))
+        result = self.agents[0].execute(user_query)
+        self.protocol.send_message("planner", target_id, f"executed:{user_query}")
+        return result
+
+
+def main():
+    config = ConfigLoader().load_config()
+    mode = config.get("multi_agent_mode", "single-agent")
+
+    telemetry = Telemetry(
+        telemetry_endpoint=config.get("telemetry_endpoint"),
+        mlflow_tracking_uri=config.get("mlflow_tracking_uri"),
+        langfuse_config={
+            "host": config.get("langfuse_host"),
+            "public_key": config.get("langfuse_public_key"),
+            "secret_key": config.get("langfuse_secret_key"),
+        },
+    )
+    telemetry.log_event("startup", f"Mode: {mode}")
+
+    if mode == "router-manager":
+        router = build_router_manager_flow(config)
+        result = router.route("Summarize the latest design document.")
+    elif mode == "planner-builder":
+        router = build_router_manager_flow(config)
+        planner = SimplePlanner(protocol=AgentToAgentProtocol(), agents=router.agents)
+        result = planner.plan_and_execute("Plan a multi-step workflow for the request.")
+    else:
+        agent = build_single_agent_flow(config)
+        result = agent.execute("Hello! Can you summarize the project scope?")
+
+    print("Execution result:", result)
+
 
 if __name__ == "__main__":
-    project = AIProject()
-    results = project.run()
-    print("Final Results:", results)
+    main()

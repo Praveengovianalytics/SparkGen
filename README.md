@@ -56,7 +56,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 
 ### ⚙️ Generating a New Project
 
-Generate a new project using the GenAI Cookiecutter template:
+Generate a new project using the Multiagentic Cookiecutter template:
 ```bash
 cookiecutter https://github.com/Praveengovianalytics/SparkGen.git
 ```
@@ -69,6 +69,18 @@ You will be prompted to enter various details:
 - `open_source_license`: Choose a license.
 - `ci_cd_tool`: Choose a CI/CD tool (e.g., GitHub Actions).
 - `deployment_platform`: Choose a deployment platform (e.g., Docker, Kubernetes).
+- `multi_agent_mode`: Choose between router-manager, planner-builder, or single-agent.
+- `api_framework`: Pick FastAPI to bootstrap an API surface or None for CLI-first.
+- `observability`: Choose Logging only or OpenTelemetry-ready wiring.
+- `openai_agent_sdk`: Enable to scaffold OpenAI Agents SDK usage (router and planner flows can delegate to Agents).
+- MCP connectivity and A2A protocol scaffolds are included to accelerate
+  multi-agent interoperability and context sharing out of the box.
+
+If you select **FastAPI**, the generated project includes `api/app.py` with
+`/health` and `/agent/invoke` endpoints; run with:
+```bash
+uvicorn {{cookiecutter.project_slug}}.api.app:app --reload
+```
 
 ---
 
