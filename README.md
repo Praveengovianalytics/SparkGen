@@ -103,32 +103,6 @@ uvicorn {{cookiecutter.project_slug}}.api.app:app --reload
    ```
 6. **Switch orchestration patterns** by changing `pattern` (e.g., `router-manager`, `sequential`, `planner-executor`, `hierarchical`, `broadcast-reduce`, `critic-review`, `tool-first`).
 
-### 🗂️ Updated Project Structure (key files)
-```
-your_project_slug/
-├── api/
-│   └── app.py               # FastAPI surface
-├── agents/                  # agent definitions
-├── prompt/                  # prompt templates
-├── llms/                    # LLM wrappers
-├── tools/                   # tool specs/functions
-├── memory/                  # memory abstractions
-├── telemetry/               # telemetry hooks
-├── orchestration/
-│   └── patterns.py          # 7 orchestration scaffolds
-├── guardrails/
-│   └── policies.py          # central guardrail manager and policies
-├── protocols/
-│   └── a2a_protocol.py      # agent-to-agent messaging
-├── connectors/
-│   └── mcp_client.py        # MCP connectivity stub
-├── docs/
-│   ├── context_engineering_spec.md
-│   └── orchestration_patterns.md
-├── tests/                   # unit tests for agents/protocols
-└── main.py                  # CLI entrypoint (single/router/planner)
-```
-
 ---
 
 ## 🔬 Table of Contents
@@ -176,26 +150,14 @@ your_project_slug/
 
 ## 🔮 Project Structure
 
-The generated project will have the following structure:
+The cookiecutter generates a single, production-ready layout with clear separation between orchestration, interfaces, and infrastructure. Optional components (e.g., FastAPI, Kubernetes) appear only when selected during project generation.
+
 ```plaintext
 your_project_slug/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml
-│       └── cd.yml
-├── notebooks/
-├── docs/
-│   └── responsible_ai.md
-├── ResponsibleAI/
-│   ├── bias_detection.py
-│   ├── privacy_preservation.py
-│   └── explainability.py
 ├── your_project_slug/
 │   ├── agents/
 │   ├── prompt/
 │   ├── llms/
-│   ├── embeddings/
-│   ├── vectordatabase/
 │   ├── tools/
 │   ├── memory/
 │   ├── callbacks/
@@ -204,44 +166,53 @@ your_project_slug/
 │   ├── config/
 │   ├── data_loaders/
 │   ├── retrievers/
-│   ├── reranker/
+│   ├── embeddings/
+│   ├── vectordatabase/
+│   ├── orchestration/
+│   ├── guardrails/
+│   ├── protocols/
+│   ├── connectors/
 │   ├── __init__.py
 │   └── main.py
+├── api/                     # FastAPI surface (if selected)
+├── ResponsibleAI/
+├── docs/
+├── notebooks/
+├── tests/
 ├── ci_cd/
 │   ├── Dockerfile
 │   ├── docker-compose.yml
 │   └── deployment/
 │       ├── kubernetes.yml
 │       └── helm-chart/
+├── .github/
+│   └── workflows/
 ├── logs/
-├── tests/
-├── .gitignore
+├── pyproject.toml
+├── poetry.lock
 ├── LICENSE
 ├── README.md
 ├── Makefile
-├── pyproject.toml
-├── poetry.lock
+└── .gitignore
 ```
 
 ### 🕹️ Key Directories and Files
-- **`agents/`**: Contains agent logic and orchestration.
-- **`prompt/`**: Manages prompt engineering and templates.
-- **`llms/`**: Integration with Large Language Models.
-- **`embeddings/`**: Handling of embedding generation.
-- **`vectordatabase/`**: Operations related to vector databases.
-- **`tools/`**: Custom tools for tasks like web scraping.
-- **`memory/`**: Memory management for agent context.
-- **`callbacks/`**: Custom callbacks for various processes.
-- **`utils/`**: Utility functions used across the project.
-- **`telemetry/`**: Monitoring and logging functionalities.
-- **`config/`**: Configuration files and loaders.
-- **`data_loaders/`**: Scripts for data loading and preprocessing.
-- **`retrievers/`**: Logic for data retrieval.
-- **`reranker/`**: Algorithms for reranking retrieved results.
-- **`main.py`**: The main entry point for running the project.
-- **`tests/`**: Contains unit and integration tests.
-- **`ci_cd/`**: CI/CD configurations and deployment scripts.
-- **`ResponsibleAI/`**: Modules focusing on Responsible AI practices.
+- **`your_project_slug/agents/`**: Agent definitions and orchestration flows.
+- **`your_project_slug/prompt/`**: Prompt templates and Jinja2 assets.
+- **`your_project_slug/tools/`**: Tool specs/functions for external actions.
+- **`your_project_slug/memory/`**: State and memory abstractions.
+- **`your_project_slug/telemetry/`**: Logging, tracing, and monitoring hooks.
+- **`your_project_slug/orchestration/`**: Coordination patterns (planner, router, sequential, etc.).
+- **`your_project_slug/guardrails/`**: Safety and policy enforcement utilities.
+- **`your_project_slug/protocols/`**: Agent-to-agent or service communication protocols.
+- **`your_project_slug/connectors/`**: Integrations such as MCP client stubs.
+- **`your_project_slug/data_loaders/`, `retrievers/`, `embeddings/`, `vectordatabase/`**: Data ingestion and retrieval building blocks.
+- **`your_project_slug/main.py`**: CLI entrypoint for running the selected orchestration mode.
+- **`api/`**: FastAPI surface for `/health` and `/agent/invoke` (generated when FastAPI is chosen).
+- **`ResponsibleAI/`**: Bias detection, privacy preservation, and explainability modules.
+- **`ci_cd/`**: Docker, Compose, and Kubernetes deployment scaffolds.
+- **`tests/`**: Unit and integration tests for agents, protocols, and tools.
+- **`docs/` & `notebooks/`**: Extended documentation and runnable examples.
 
 ---
 
@@ -380,34 +351,6 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ## ⌛ Change Log
 
 To be Updated
-
----
-## 🛤️ Roadmap
-
-- [x] **Q4 2024**
-  - [x] Launch SparkGen v0.1 with core features, including modular project structure, LLM integration, and Responsible AI modules.
-  - [ ] Publish detailed documentation and examples to facilitate adoption.
-  - [ ] Detail examples for RAG , Agentic workflows and Agentops
-
-- [ ] **Q1 2025**
-  - [ ] Introduce pre-configured deployment templates for popular cloud platforms (AWS, Azure, GCP).
-  - [ ] Expand Responsible AI capabilities with additional modules for ethical compliance.
-  - [ ] Incorporate advanced CI/CD templates for seamless pipeline integration.
-
-- [ ] **Q2 2025**
-  - [ ] Add support for multi-agent systems and orchestration tools.
-  - [ ] Enhance embedding and vector database integration for scalability in enterprise use cases.
-  - [ ] Develop a community forum to share extensions and improvements.
-
-- [ ] **Q3 2025**
-  - [ ] Release v1.0 with enhanced memory management and new tools for prompt engineering.
-  - [ ] Provide integration guides for proprietary LLMs and APIs.
-  - [ ] Expand telemetry and monitoring features with detailed dashboards.
-
-- [ ] **Beyond Q3 2025**
-  - [ ] Focus on real-time collaboration tools for distributed AI teams.
-  - [ ] Introduce customizable UI/UX templates for AI applications.
-  - [ ] Build partnerships with academic and industry leaders to continuously evolve SparkGen.
 
 ---
 
