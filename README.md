@@ -35,7 +35,7 @@ Whether you're building a conversational agent, multi-model agent, AI-powered ap
 ## :fire: Quickstart
 
 ### 🔍 Prerequisites
-- Python 3.9+
+- Python 3.11+
 - Cookiecutter: For generating projects from templates.
 - Poetry: For dependency management.
 - Git
@@ -245,6 +245,24 @@ poetry run python your_project_slug/main.py
 ## 🔄 Examples
 - **Jupyter Notebooks**: Explore the `notebooks/` directory for example notebooks demonstrating usage of different components.
 - **Command-Line Arguments**: Modify `main.py` to accept command-line arguments for different modes or functionalities.
+
+### Example: Run the single-agent CLI
+```bash
+poetry run python your_project_slug/main.py --pattern single-agent --query "Summarize today's news"
+```
+
+### Example: Switch to router-manager orchestration
+```bash
+poetry run python your_project_slug/main.py --pattern router-manager --query "Create a trip plan for Tokyo"
+```
+
+### Example: Call the FastAPI endpoint
+```bash
+uvicorn your_project_slug.api.app:app --reload &
+curl -X POST http://localhost:8000/agent/invoke \\
+  -H "Content-Type: application/json" \\
+  -d '{"query":"Draft a blog outline about SparkGen","pattern":"single-agent"}'
+```
 
 ---
 
