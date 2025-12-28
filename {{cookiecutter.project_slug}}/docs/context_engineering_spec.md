@@ -17,7 +17,11 @@ skills, and agent collaboration patterns generated from this template.
 
 2. **Skill Registry**
    - Document skills each agent owns (align with `protocols/a2a_protocol.py`).
-   - For MCP-driven skills, outline the resource names and schema contracts.
+   - For MCP-driven skills, outline the resource names and schema contracts, and
+     reflect them in `config/mcp_connectors.yaml` with `active` flags.
+   - The template includes demo MCP skills (`demo.calculator`, `demo.datetime`,
+     `demo.local_terminal`) to accelerate local testing—swap or disable them for
+     production.
 
 3. **Prompt Contracts**
    - Keep prompts declarative; store defaults in `prompt_template.py`.
