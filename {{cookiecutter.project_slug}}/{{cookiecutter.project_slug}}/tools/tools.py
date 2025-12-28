@@ -1,3 +1,7 @@
+from typing import Any, Dict, List
+
+from {{ cookiecutter.project_slug }}.connectors.mcp_client import build_mcp_tooling
+
 tools = [
     {
         "type": "function",
@@ -18,3 +22,14 @@ tools = [
         }
     }
 ]
+
+
+def assemble_tools(config: Dict[str, Any]) -> List[dict]:
+    """
+    Combine built-in tools with MCP tooling derived from configuration. If the
+    config already contains pre-built MCP tool specs, they are reused to avoid
+    recomputing.
+    """
+    base_tools = list(tools)
+    mcp_tooling = config.get("mcp_tools") or build_mcp_tooling(config.get("mcp_connectors", []))
+    return base_tools + mcp_tooling

@@ -20,7 +20,7 @@ from {{ cookiecutter.project_slug }}.agents.agent import Agent, RouterManager
 from {{ cookiecutter.project_slug }}.agents.eval_agent import EvaluationAgent
 from {{ cookiecutter.project_slug }}.prompt.prompt_template import PromptTemplate
 from {{ cookiecutter.project_slug }}.llms.base_llm import BaseLLM
-from {{ cookiecutter.project_slug }}.tools.tools import tools
+from {{ cookiecutter.project_slug }}.tools.tools import assemble_tools
 from {{ cookiecutter.project_slug }}.memory.memory import ChatMemory
 from {{ cookiecutter.project_slug }}.telemetry.telemetry import Telemetry
 from {{ cookiecutter.project_slug }}.config.config_loader import ConfigLoader
@@ -45,10 +45,11 @@ def build_base_components(config, telemetry):
 
 
 def build_single_agent_flow(config, telemetry):
+    toolset = assemble_tools(config)
     llm, prompt, memory, guardrails, telemetry = build_base_components(config, telemetry)
     agent = Agent(
         llm=llm,
-        tools=tools,
+        tools=toolset,
         prompt=prompt.PROMPT_TEMPLATE,
         history=[],
         output_parser=lambda resp: resp,
@@ -61,11 +62,12 @@ def build_single_agent_flow(config, telemetry):
 
 
 def build_router_manager_flow(config, telemetry):
+    toolset = assemble_tools(config)
     llm, prompt, memory, guardrails, telemetry = build_base_components(config, telemetry)
 
     research_agent = Agent(
         llm=llm,
-        tools=tools,
+        tools=toolset,
         prompt=f"Research agent: {prompt.PROMPT_TEMPLATE}",
         history=["You are a research specialist."],
         output_parser=lambda resp: resp,
@@ -77,7 +79,7 @@ def build_router_manager_flow(config, telemetry):
 
     coding_agent = Agent(
         llm=llm,
-        tools=tools,
+        tools=toolset,
         prompt=f"Coding agent: {prompt.PROMPT_TEMPLATE}",
         history=["You write code and return patches."],
         output_parser=lambda resp: resp,
