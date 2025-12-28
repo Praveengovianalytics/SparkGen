@@ -1,43 +1,54 @@
-from openai import OpenAI
+import hashlib
+from typing import List, Sequence
+
+import numpy as np
+
 
 class Embedder:
     """
-    A class designed to interact with OpenAI's embedding model.
-    It takes a query, processes it through the OpenAI API, and returns embeddings for that query.
-
-    Attributes:
-        embedder (OpenAI): An instance of OpenAI initialized with the model configuration for embedding.
+    Lightweight, dependency-free embedder that produces deterministic vectors.
+    Designed for starter projects to avoid heavy external services.
     """
 
-    def __init__(self, model_config: dict) -> None:
+    def __init__(self, dimensions: int = 128) -> None:
         """
-        Initializes the Embedder instance with the provided model configuration.
+        Initializes the Embedder instance.
 
         Args:
-            model_config (dict): A dictionary containing the model's configuration parameters 
-                                 such as API key, model ID, etc.
+            dimensions (int): Size of the embedding vector to generate.
         """
-        # Initialize the OpenAI instance with the provided configuration for embeddings
-        self.embedder = OpenAI(**model_config)
-    
-    def embed_query(self, query: str, callback: object = None):
-        """
-        Sends a query to the embedding model and returns the embedding vector.
+        self.dimensions = dimensions
 
-        Args:
-            query (str): The input query to be embedded by the language model.
-            callback (object, optional): A placeholder for a callback function that can process the embedding output. 
-                                         Default is None.
-
-        Returns:
-            output (list): The embedding vector generated from the input query.
+    def _token_vector(self, token: str) -> np.ndarray:
         """
-        # Start input capture (expandable for logging or monitoring the input)
-        
-        # Generate the embedding for the query
-        output = self.embedder(query)
-        
-        # Token utilization capture (expandable for tracking the number of tokens used)
-        # End output capture (expandable for logging or monitoring the output)
-        # Return the generated embedding vector
-        return output
+        Convert a token into a deterministic vector using hashing.
+        """
+        # Use SHA-256 to ensure consistent token representation.
+        digest = hashlib.sha256(token.encode("utf-8")).digest()
+        # Expand digest to the requested dimensions by repeating.
+        repeat_count = (self.dimensions + len(digest) - 1) // len(digest)
+        expanded = (digest * repeat_count)[: self.dimensions]
+        return np.frombuffer(expanded, dtype=np.uint8).astype(np.float32)
+
+    def embed(self, text: str) -> List[float]:
+        """
+        Generates an embedding vector for the provided text.
+        """
+        tokens = text.split()
+        if not tokens:
+            return [0.0] * self.dimensions
+
+        vectors = [self._token_vector(token) for token in tokens]
+        stacked = np.stack(vectors)
+        mean_vector = stacked.mean(axis=0)
+        norm = np.linalg.norm(mean_vector)
+        if norm == 0:
+            return [0.0] * self.dimensions
+        normalized = (mean_vector / norm).tolist()
+        return normalized
+
+    def embed_documents(self, documents: Sequence[str]) -> List[List[float]]:
+        """
+        Generate embeddings for a list of documents.
+        """
+        return [self.embed(doc) for doc in documents]

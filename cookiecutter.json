@@ -10,7 +10,7 @@
     "multi_agent_mode": ["router-manager", "planner-builder", "single-agent"],
     "api_framework": ["FastAPI", "None"],
     "observability": ["Logging only", "OpenTelemetry-ready"],
-    "openai_agent_sdk": ["enabled", "disabled"],
+    "openai_agent_sdk": ["disabled", "enabled"],
     "_copy_without_render": [
         "{{ cookiecutter.project_slug }}/prompt/*.py",
         "{{ cookiecutter.project_slug }}/templates/**"

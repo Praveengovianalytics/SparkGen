@@ -1,22 +1,33 @@
-class Retriever(BaseRetriever):
-    embedding_function: Embeddings
-    collection_name: str = "LangChainCollection"
-    connection_args: Optional[Dict[str, Any]] = None
-    search_params: Optional[dict] = None
-    retriever: BaseRetriever
+from typing import Dict, List, Optional
 
-    def create_client(cls, values: dict) -> Any:
-        return values
+from {{ cookiecutter.project_slug }}.embeddings.embedder import Embedder
+from {{ cookiecutter.project_slug }}.vectordatabase.vector_store import InMemoryVectorStore
+
+
+class Retriever:
+    """
+    Minimal retriever that wraps the in-memory vector store.
+    """
+
+    def __init__(
+        self,
+        vector_store: Optional[InMemoryVectorStore] = None,
+        embedder: Optional[Embedder] = None,
+        top_k: int = 3,
+    ) -> None:
+        self.vector_store = vector_store or InMemoryVectorStore(embedder=embedder)
+        self.top_k = top_k
 
     def add_texts(
-        self, texts: List[str], metadatas: Optional[List[dict]] = None
+        self, texts: List[str], metadatas: Optional[List[Dict]] = None
     ) -> None:
-        self.store.add_texts(texts, metadatas)
+        """
+        Index a batch of texts with optional metadata.
+        """
+        self.vector_store.add_documents(texts, metadatas)
 
-    def _get_relevant_documents(
-        self,query: str, 
-        run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
-        
-        return self.retriever.invoke(
-            query, run_manager=run_manager.get_child(), **kwargs
-        )
+    def retrieve(self, query: str) -> List[Dict]:
+        """
+        Return the most relevant documents for a query.
+        """
+        return self.vector_store.search(query, top_k=self.top_k)
