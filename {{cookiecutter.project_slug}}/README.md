@@ -23,7 +23,10 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
 
 ### 🛰️ Connectivity & Protocols
 - **MCP Connectivity**: `connectors/mcp_client.py` contains a stub to negotiate
-  Model Context Protocol resources and schemas.
+  Model Context Protocol resources and schemas. Configure gateways and tools in
+  `config/mcp_connectors.yaml` (or override with `MCP_CONFIG_PATH`). Tools and
+  gateways marked `active: true` are exposed to agents; credentials are pulled
+  from environment variables referenced as `${ENV_VAR_NAME}`.
 - **A2A Protocol**: `protocols/a2a_protocol.py` offers an agent-to-agent message
   scaffold for sharing skills and context across agents.
 - **Orchestration Patterns**: `orchestration/patterns.py` includes 7 scaffolds
@@ -57,6 +60,16 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
    `single-agent`, `router-manager`, `sequential`, `planner-executor`,
    `hierarchical`, `broadcast-reduce`, `critic-review`, `tool-first`.
 
+## 🔌 Configuring MCP gateways & tools
+1. Declare gateways and tools in `config/mcp_connectors.yaml`. Use `${ENV_VAR}`
+   placeholders for credentials so secrets stay out of version control.
+2. Mark a gateway or tool `active: true` to expose it to agents; inactive items
+   stay hidden but documented in the file.
+3. Override the config location with `MCP_CONFIG_PATH` to point at an ops-managed
+   secret store or environment-specific file.
+4. Agents automatically merge these MCP tools with built-in tools so the LLM can
+   select them during planning and execution.
+
 ## 🗂️ Project Structure (key files)
 ```
 {{cookiecutter.project_slug}}/
@@ -76,6 +89,9 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
 │   └── a2a_protocol.py      # agent-to-agent messaging
 ├── connectors/
 │   └── mcp_client.py        # MCP connectivity stub
+├── config/
+│   ├── config_loader.py     # environment + YAML configuration loader
+│   └── mcp_connectors.yaml  # MCP gateway and tool registry (toggle active flags)
 ├── docs/
 │   ├── context_engineering_spec.md
 │   └── orchestration_patterns.md

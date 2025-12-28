@@ -1,7 +1,10 @@
 import os
+from pathlib import Path
 from typing import Dict, Any
 
 from dotenv import load_dotenv
+
+from {{ cookiecutter.project_slug }}.connectors.mcp_client import build_mcp_tooling, load_mcp_connectors
 
 
 class ConfigLoader:
@@ -14,12 +17,16 @@ class ConfigLoader:
     def load_config(self) -> Dict[str, Any]:
         """
         Load configuration from environment variables with defaults that can be
-        overridden at runtime.
+        overridden at runtime. Also loads MCP connector/tool definitions from a
+        YAML file so agents can surface only the enabled MCP tools.
 
         Returns:
             Dict[str, Any]: configuration mapping for the runtime components.
         """
         load_dotenv()
+        default_mcp_config = Path(__file__).with_name("mcp_connectors.yaml")
+        mcp_config_path = os.getenv("MCP_CONFIG_PATH", str(default_mcp_config))
+        mcp_connectors = load_mcp_connectors(mcp_config_path)
         return {
             "api_key": os.getenv("LLM_API_KEY", "your-api-key"),
             "model_name": os.getenv("LLM_MODEL_NAME", "gpt-4o-mini"),
@@ -39,4 +46,7 @@ class ConfigLoader:
             "langfuse_secret_key": os.getenv("LANGFUSE_SECRET_KEY", "your-secret-key"),
             "guardrail_banned_terms": os.getenv("GUARDRAIL_BANNED_TERMS", ""),
             "guardrail_max_output_len": os.getenv("GUARDRAIL_MAX_OUTPUT_LEN", "2000"),
+            "mcp_config_path": mcp_config_path,
+            "mcp_connectors": mcp_connectors,
+            "mcp_tools": build_mcp_tooling(mcp_connectors),
         }

@@ -1,0 +1,42 @@
+# Model Context Protocol (MCP) gateway configuration
+#
+# This YAML file allows you to register multiple MCP gateways and the tools
+# each gateway exposes. Keep credentials in environment variables (see the
+# `${ENV_VAR_NAME}` placeholders) instead of hard-coding secrets.
+# Agents will only surface tools that are marked as `active: true`.
+#
+# You can override this path at runtime with MCP_CONFIG_PATH.
+
+gateways:
+  - name: local-research
+    description: Local MCP gateway for research-style tools.
+    host: localhost
+    port: 8800
+    protocol: ws
+    active: true
+    credentials:
+      api_key: "${LOCAL_MCP_API_KEY}"
+    tools:
+      - name: search_corpus
+        resource: research.search
+        description: Query the local research corpus for passages.
+        active: true
+      - name: summarize_url
+        resource: research.summarize_url
+        description: Summarize the contents of a given URL via MCP.
+        active: false
+
+  - name: partner-ops
+    description: Partner-managed MCP gateway for operational lookups.
+    host: mcp.partner.example.com
+    port: 443
+    protocol: https
+    active: false
+    credentials:
+      bearer_token: "${PARTNER_MCP_TOKEN}"
+      tenant_id: "${PARTNER_TENANT_ID}"
+    tools:
+      - name: inventory_lookup
+        resource: ops.inventory.lookup
+        description: Retrieve inventory details by SKU or warehouse.
+        active: true

@@ -16,7 +16,7 @@ from {{ cookiecutter.project_slug }}.llms.base_llm import BaseLLM
 from {{ cookiecutter.project_slug }}.orchestration import patterns
 from {{ cookiecutter.project_slug }}.prompt.prompt_template import PromptTemplate
 from {{ cookiecutter.project_slug }}.protocols.a2a_protocol import AgentToAgentProtocol
-from {{ cookiecutter.project_slug }}.tools.tools import tools
+from {{ cookiecutter.project_slug }}.tools.tools import assemble_tools
 
 app = FastAPI(title="{{ cookiecutter.project_name }} Agent API")
 
@@ -37,9 +37,10 @@ def build_single_agent(config):
         }
     )
     prompt = PromptTemplate()
+    toolset = assemble_tools(config)
     return Agent(
         llm=llm,
-        tools=tools,
+        tools=toolset,
         prompt=prompt.PROMPT_TEMPLATE,
         history=[],
         output_parser=None,
@@ -58,9 +59,10 @@ def build_router_pattern(config):
             "agent_id": config.get("openai_agent_id"),
         }
     ), PromptTemplate()
+    toolset = assemble_tools(config)
     research_agent = Agent(
         llm=llm,
-        tools=tools,
+        tools=toolset,
         prompt=f"Research agent: {prompt.PROMPT_TEMPLATE}",
         history=["You are a research specialist."],
         output_parser=None,
@@ -69,7 +71,7 @@ def build_router_pattern(config):
     )
     coding_agent = Agent(
         llm=llm,
-        tools=tools,
+        tools=toolset,
         prompt=f"Coding agent: {prompt.PROMPT_TEMPLATE}",
         history=["You write code and return patches."],
         output_parser=None,
