@@ -69,6 +69,10 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
    secret store or environment-specific file.
 4. Agents automatically merge these MCP tools with built-in tools so the LLM can
    select them during planning and execution.
+5. The template ships demo MCP resources (`demo.calculator`, `demo.datetime`,
+   `demo.local_terminal`) to quickly validate MCP wiring without provisioning an
+   external gateway. `demo.local_terminal` only allows `echo`, `pwd`, and `ls`
+   for safety.
 
 ## 🗂️ Project Structure (key files)
 ```

@@ -40,3 +40,23 @@ gateways:
         resource: ops.inventory.lookup
         description: Retrieve inventory details by SKU or warehouse.
         active: true
+
+  - name: local-utilities
+    description: Demo gateway showcasing calculator, datetime, and guarded terminal access.
+    host: localhost
+    port: 8900
+    protocol: ws
+    active: true
+    tools:
+      - name: calculator
+        resource: demo.calculator
+        description: Evaluate a math expression using the built-in demo handler.
+        active: true
+      - name: current_time
+        resource: demo.datetime
+        description: Return the current UTC datetime in ISO8601 format.
+        active: true
+      - name: local_terminal
+        resource: demo.local_terminal
+        description: Run allowlisted local commands (echo, pwd, ls) for quick MCP testing.
+        active: true
