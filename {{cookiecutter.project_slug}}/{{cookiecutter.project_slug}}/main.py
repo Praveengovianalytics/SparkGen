@@ -12,6 +12,7 @@ The goal is to mirror modern multi-agent templates such as
 `neural-maze/agent-api-cookiecutter` while keeping the project beginner-friendly.
 """
 
+import argparse
 from typing import List
 
 from {{ cookiecutter.project_slug }}.agents.agent import Agent, RouterManager
@@ -48,6 +49,7 @@ def build_single_agent_flow(config):
         prompt=prompt.PROMPT_TEMPLATE,
         history=[],
         output_parser=lambda resp: resp,
+        memory=memory,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
         guardrails=guardrails,
     )
@@ -63,6 +65,7 @@ def build_router_manager_flow(config):
         prompt=f"Research agent: {prompt.PROMPT_TEMPLATE}",
         history=["You are a research specialist."],
         output_parser=lambda resp: resp,
+        memory=memory,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
         guardrails=guardrails,
     )
@@ -73,6 +76,7 @@ def build_router_manager_flow(config):
         prompt=f"Coding agent: {prompt.PROMPT_TEMPLATE}",
         history=["You write code and return patches."],
         output_parser=lambda resp: resp,
+        memory=memory,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
         guardrails=guardrails,
     )
@@ -100,9 +104,25 @@ class SimplePlanner:
         return result
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run SparkGen agent flows.")
+    parser.add_argument(
+        "--pattern",
+        choices=["single-agent", "router-manager", "planner-builder"],
+        help="Override the multi-agent pattern.",
+    )
+    parser.add_argument(
+        "--query",
+        help="User query to send to the selected pattern.",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     config = ConfigLoader().load_config()
-    mode = config.get("multi_agent_mode", "single-agent")
+    mode = args.pattern or config.get("multi_agent_mode", "single-agent")
+    user_query = args.query or "Hello! Can you summarize the project scope?"
 
     telemetry = Telemetry(
         telemetry_endpoint=config.get("telemetry_endpoint"),
@@ -117,14 +137,14 @@ def main():
 
     if mode == "router-manager":
         router = build_router_manager_flow(config)
-        result = router.route("Summarize the latest design document.")
+        result = router.route(user_query)
     elif mode == "planner-builder":
         router = build_router_manager_flow(config)
         planner = SimplePlanner(protocol=AgentToAgentProtocol(), agents=router.agents)
-        result = planner.plan_and_execute("Plan a multi-step workflow for the request.")
+        result = planner.plan_and_execute(user_query)
     else:
         agent = build_single_agent_flow(config)
-        result = agent.execute("Hello! Can you summarize the project scope?")
+        result = agent.execute(user_query)
 
     print("Execution result:", result)
 

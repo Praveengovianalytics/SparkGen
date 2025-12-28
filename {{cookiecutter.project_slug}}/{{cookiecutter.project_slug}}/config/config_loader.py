@@ -1,6 +1,8 @@
 import os
 from typing import Dict, Any
 
+from dotenv import load_dotenv
+
 
 class ConfigLoader:
     """
@@ -17,6 +19,7 @@ class ConfigLoader:
         Returns:
             Dict[str, Any]: configuration mapping for the runtime components.
         """
+        load_dotenv()
         return {
             "api_key": os.getenv("LLM_API_KEY", "your-api-key"),
             "model_name": os.getenv("LLM_MODEL_NAME", "gpt-4o-mini"),
