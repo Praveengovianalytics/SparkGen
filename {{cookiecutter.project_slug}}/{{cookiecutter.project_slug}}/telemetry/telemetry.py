@@ -37,14 +37,19 @@ class Telemetry:
     def _resolve_langfuse_client(self, langfuse_config: Optional[Dict[str, str]]):
         if not langfuse_config:
             return None
+        public_key = langfuse_config.get("public_key")
+        secret_key = langfuse_config.get("secret_key")
+        host = langfuse_config.get("host")
+        if not public_key or not secret_key or not host:
+            return None
         spec = importlib.util.find_spec("langfuse")
         if spec is None or spec.name is None:
             return None
         langfuse_module = importlib.import_module(spec.name)
         return langfuse_module.Langfuse(  # type: ignore[attr-defined]
-            public_key=langfuse_config.get("public_key"),
-            secret_key=langfuse_config.get("secret_key"),
-            host=langfuse_config.get("host"),
+            public_key=public_key,
+            secret_key=secret_key,
+            host=host,
         )
 
     def log_event(self, event_name: str, details: str):
@@ -90,3 +95,18 @@ class Telemetry:
                 )
             except Exception:
                 pass
+
+    def log_api_trace(self, route: str, status_code: int, latency_ms: float) -> None:
+        """
+        Log API call telemetry to Langfuse if available.
+        """
+        if not self.langfuse_client:
+            return
+        try:
+            self.langfuse_client.trace(  # type: ignore[attr-defined]
+                name=f"api:{route}",
+                input={"route": route, "status_code": status_code, "latency_ms": latency_ms},
+                metadata={"session_id": self.session_id},
+            )
+        except Exception:
+            pass

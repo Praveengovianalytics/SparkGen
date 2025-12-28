@@ -5,7 +5,8 @@ Define pre- and post-execution guardrails that can be composed per agent or
 globally. Extend these with custom checks (PII, safety, domain rules) as needed.
 """
 
-from typing import Callable, Dict, List
+import re
+from typing import Callable, Dict, List, Optional
 
 
 class GuardrailViolation(Exception):
@@ -13,17 +14,27 @@ class GuardrailViolation(Exception):
 
 
 class GuardrailManager:
-    def __init__(self, pre: List[Callable[[str], None]] = None, post: List[Callable[[str], None]] = None):
+    def __init__(
+        self,
+        pre: Optional[List[Callable[[str], None]]] = None,
+        post: Optional[List[Callable[[str], None]]] = None,
+        scrubbers: Optional[List[Callable[[str], str]]] = None,
+    ):
         self.pre = pre or []
         self.post = post or []
+        self.scrubbers = scrubbers or []
 
     def run_pre(self, user_input: str):
         for check in self.pre:
             check(user_input)
 
-    def run_post(self, output: str):
+    def run_post(self, output: str) -> str:
+        sanitized = output
+        for scrubber in self.scrubbers:
+            sanitized = scrubber(sanitized)
         for check in self.post:
-            check(output)
+            check(sanitized)
+        return sanitized
 
 
 # Example, configurable policies
@@ -47,6 +58,14 @@ def limit_output_length(max_len: int = 2000):
     return _checker
 
 
+def scrub_emails(text: str) -> str:
+    """
+    Redact email-like strings to protect PII in outputs.
+    """
+    email_regex = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
+    return email_regex.sub("[REDACTED_EMAIL]", text)
+
+
 def build_default_guardrails(config: Dict) -> GuardrailManager:
     """
     Build default guardrails using config-driven policies.
@@ -59,4 +78,6 @@ def build_default_guardrails(config: Dict) -> GuardrailManager:
         pre_checks.append(block_banned_terms([term.strip() for term in banned_terms if term.strip()]))
     post_checks = [limit_output_length(max_len)]
 
-    return GuardrailManager(pre=pre_checks, post=post_checks)
+    scrubbers = [scrub_emails]
+
+    return GuardrailManager(pre=pre_checks, post=post_checks, scrubbers=scrubbers)

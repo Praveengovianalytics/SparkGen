@@ -1,0 +1,14 @@
+[
+  {
+    "query": "What telemetry library is initialized?",
+    "context": "The Telemetry class can initialize Langfuse when keys are provided in the environment.",
+    "expected_answer": "Langfuse",
+    "source": "telemetry"
+  },
+  {
+    "query": "How is chat memory persisted?",
+    "context": "ChatMemory stores history in a JSON file on disk to persist across runs.",
+    "expected_answer": "JSON file",
+    "source": "memory"
+  }
+]

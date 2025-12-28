@@ -13,9 +13,11 @@ The goal is to mirror modern multi-agent templates such as
 """
 
 import argparse
+from pathlib import Path
 from typing import List
 
 from {{ cookiecutter.project_slug }}.agents.agent import Agent, RouterManager
+from {{ cookiecutter.project_slug }}.agents.eval_agent import EvaluationAgent
 from {{ cookiecutter.project_slug }}.prompt.prompt_template import PromptTemplate
 from {{ cookiecutter.project_slug }}.llms.base_llm import BaseLLM
 from {{ cookiecutter.project_slug }}.tools.tools import tools
@@ -24,9 +26,10 @@ from {{ cookiecutter.project_slug }}.telemetry.telemetry import Telemetry
 from {{ cookiecutter.project_slug }}.config.config_loader import ConfigLoader
 from {{ cookiecutter.project_slug }}.protocols.a2a_protocol import AgentToAgentProtocol
 from {{ cookiecutter.project_slug }}.guardrails.policies import build_default_guardrails
+from {{ cookiecutter.project_slug }}.evaluation.evaluator import RAGEvaluator
 
 
-def build_base_components(config):
+def build_base_components(config, telemetry):
     llm = BaseLLM(
         {
             "api_key": config["api_key"],
@@ -38,11 +41,11 @@ def build_base_components(config):
     prompt = PromptTemplate()
     memory = ChatMemory()
     guardrails = build_default_guardrails(config)
-    return llm, prompt, memory, guardrails
+    return llm, prompt, memory, guardrails, telemetry
 
 
-def build_single_agent_flow(config):
-    llm, prompt, memory, guardrails = build_base_components(config)
+def build_single_agent_flow(config, telemetry):
+    llm, prompt, memory, guardrails, telemetry = build_base_components(config, telemetry)
     agent = Agent(
         llm=llm,
         tools=tools,
@@ -50,14 +53,15 @@ def build_single_agent_flow(config):
         history=[],
         output_parser=lambda resp: resp,
         memory=memory,
+        telemetry=telemetry,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
         guardrails=guardrails,
     )
     return agent
 
 
-def build_router_manager_flow(config):
-    llm, prompt, memory, guardrails = build_base_components(config)
+def build_router_manager_flow(config, telemetry):
+    llm, prompt, memory, guardrails, telemetry = build_base_components(config, telemetry)
 
     research_agent = Agent(
         llm=llm,
@@ -66,6 +70,7 @@ def build_router_manager_flow(config):
         history=["You are a research specialist."],
         output_parser=lambda resp: resp,
         memory=memory,
+        telemetry=telemetry,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
         guardrails=guardrails,
     )
@@ -77,6 +82,7 @@ def build_router_manager_flow(config):
         history=["You write code and return patches."],
         output_parser=lambda resp: resp,
         memory=memory,
+        telemetry=telemetry,
         use_agents_sdk=config.get("openai_agent_sdk") == "enabled",
         guardrails=guardrails,
     )
@@ -108,12 +114,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run SparkGen agent flows.")
     parser.add_argument(
         "--pattern",
-        choices=["single-agent", "router-manager", "planner-builder"],
+        choices=["single-agent", "router-manager", "planner-builder", "evaluation"],
         help="Override the multi-agent pattern.",
     )
     parser.add_argument(
         "--query",
         help="User query to send to the selected pattern.",
+    )
+    parser.add_argument(
+        "--dataset",
+        default=str(Path(__file__).parent / "evaluation" / "rag_dataset.json"),
+        help="Path to evaluation dataset for --pattern evaluation.",
     )
     return parser.parse_args()
 
@@ -136,14 +147,18 @@ def main():
     telemetry.log_event("startup", f"Mode: {mode}")
 
     if mode == "router-manager":
-        router = build_router_manager_flow(config)
+        router = build_router_manager_flow(config, telemetry)
         result = router.route(user_query)
     elif mode == "planner-builder":
-        router = build_router_manager_flow(config)
+        router = build_router_manager_flow(config, telemetry)
         planner = SimplePlanner(protocol=AgentToAgentProtocol(), agents=router.agents)
         result = planner.plan_and_execute(user_query)
+    elif mode == "evaluation":
+        evaluator = RAGEvaluator(dataset_path=args.dataset)
+        evaluation_agent = EvaluationAgent(evaluator=evaluator, telemetry=telemetry)
+        result = evaluation_agent.execute(user_query or "Run evaluation suite.")
     else:
-        agent = build_single_agent_flow(config)
+        agent = build_single_agent_flow(config, telemetry)
         result = agent.execute(user_query)
 
     print("Execution result:", result)

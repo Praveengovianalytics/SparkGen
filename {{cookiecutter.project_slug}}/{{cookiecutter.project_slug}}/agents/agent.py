@@ -2,6 +2,7 @@ from typing import List, Callable, Any, Optional
 
 from {{ cookiecutter.project_slug }}.guardrails.policies import GuardrailManager
 from {{ cookiecutter.project_slug }}.memory.memory import ChatMemory
+from {{ cookiecutter.project_slug }}.telemetry.telemetry import Telemetry
 
 
 class Agent:
@@ -19,6 +20,7 @@ class Agent:
         history: List[str],
         output_parser: Callable[[Any], Any],
         memory: Optional[ChatMemory] = None,
+        telemetry: Optional[Telemetry] = None,
         use_agents_sdk: bool = False,
         guardrails: Optional[GuardrailManager] = None,
     ) -> None:
@@ -27,6 +29,7 @@ class Agent:
         self._prompt = prompt
         self._history = history
         self._memory = memory
+        self._telemetry = telemetry
         self._output_parser = output_parser
         self._use_agents_sdk = use_agents_sdk
         self._guardrails = guardrails or GuardrailManager()
@@ -64,6 +67,8 @@ class Agent:
     def execute(self, user_query: str) -> Any:
         """Run the agent workflow: prepare prompt, query LLM, parse result."""
         self._guardrails.run_pre(user_query)
+        if self._telemetry:
+            self._telemetry.log_event("agent_input", user_query)
         formatted_history = self.prepare_history()
         final_prompt = self.prepare_prompt(self._validated_tools, formatted_history)
         if self._use_agents_sdk:
@@ -73,9 +78,11 @@ class Agent:
         parsed = self.parse_output(llm_response)
         # Apply post-guardrails on stringified content.
         if isinstance(parsed, str):
-            self._guardrails.run_post(parsed)
+            parsed = self._guardrails.run_post(parsed)
         if self._memory:
             self._memory.save_context(user_query, parsed if isinstance(parsed, str) else str(parsed))
+        if self._telemetry:
+            self._telemetry.log_event("agent_output", str(parsed))
         return parsed
 
 
