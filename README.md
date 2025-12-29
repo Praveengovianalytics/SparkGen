@@ -1,375 +1,498 @@
-<img src="https://github.com/user-attachments/assets/d442f52b-4c3d-4d50-99df-1bdf130e018d" alt="Image Description" width="800">
+<img src="https://github.com/user-attachments/assets/d442f52b-4c3d-4d50-99df-1bdf130e018d" alt="SparkGen logo" width="800">
 
+# SparkGen Cookiecutter Template
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/Praveengovianalytics/SparkGen)](https://github.com/Praveengovianalytics/SparkGen/issues)
-[![GitHub release](https://img.shields.io/github/release/Praveengovianalytics/SparkGen)](https://github.com/Praveengovianalytics/SparkGen/releases)
-[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://github.com/Praveengovianalytics/SparkGen/releases)
-</a>
-<a href="https://www.python.org/">
-<img alt="Build" src="https://img.shields.io/badge/Made%20with-Python-1f425f.svg?color=green">
-</a>
+SparkGen is a Cookiecutter template that scaffolds production-ready GenAI projects with multi-agent orchestration, optional FastAPI surfaces, RAG building blocks, guardrails, MCP connectivity, and telemetry hooks. This README is a start-to-finish guide: follow it to go from nothing to a working project without hunting for additional docs.
 
-<h4 align="center">
-    <p>
-        <a href="#shield-installation">Installation</a> |
-        <a href="#fire-quickstart">Quickstart</a> |
-    <p>
-</h4>
+> **TIP**: New to Cookiecutter? You only need Python and this README. Everything else is scaffolded for you.
 
 ---
-## ⚛ Introduction
-SparkGen✨  is an open-source GenAI accelerator template designed to streamline the creation of Generative AI projects. It provides a comprehensive and modular project structure that integrates best practices in software development, deployment, and responsible AI considerations.
 
-Whether you're building a conversational agent, multi-model agent, AI-powered application, or experimenting with large language models, this template provides a solid foundation to accelerate your development process.
-
-# Story of SparkGen 🎸✨
-
-## How SparkGen Was Created
-
-*The story of **SparkGen** began in Bangkok, during a recent business trip that led me to the vibrant **Hard Rock Cafe**. Amidst the electrifying music and creative energy, I reflected on how small sparks of inspiration can create extraordinary compositions—whether in music or technology.*
-*Sitting in that dynamic atmosphere, it struck me: what if we had a "hard rock" foundation for Generative AI? A toolkit designed to ignite innovation and help teams seamlessly create impactful AI solutions. By the end of the night, the name **SparkGen** was developed—a fusion of creativity, simplicity, and the generative power of AI.*
-*SparkGen is built to inspire, accelerate, and empower AI creators to turn ideas into reality. Just like music brings people together to create something extraordinary, SparkGen helps you compose your own AI ideas to reality.*
+## Table of Contents
+- [1. Overview](#1-overview)
+- [2. Prerequisites](#2-prerequisites)
+- [3. Quick Start (zero → running project)](#3-quick-start-zero--running-project)
+- [4. Template Options](#4-template-options)
+- [5. Project Structure Walkthrough](#5-project-structure-walkthrough)
+- [6. Development Workflow](#6-development-workflow)
+- [7. Configuration & Environments](#7-configuration--environments)
+- [8. CI/CD](#8-cicd)
+- [9. Common Tasks](#9-common-tasks)
+- [10. Troubleshooting / FAQ](#10-troubleshooting--faq)
+- [11. Appendix](#11-appendix)
 
 ---
-## :fire: Quickstart
 
-### 🔍 Prerequisites
-- Python 3.11+
-- Cookiecutter: For generating projects from templates.
-- Poetry: For dependency management.
-- Git
-- Docker (optional): For containerization.
-- Kubernetes (optional): For orchestration.
+## 1. Overview
 
-## :shield: Installation
+**What this template generates**
+- Python 3.11+ GenAI project with:
+  - CLI entrypoint for agent flows and Spec-as-Code workflows.
+  - Optional FastAPI service with `/health` and `/agent/invoke` endpoints.
+  - Multi-agent orchestration patterns (single, router-manager, planner-builder) and reusable orchestration helpers (sequential, hierarchical, critic-review, tool-first, broadcast-reduce).
+  - RAG scaffolding (embeddings, in-memory vector store, retriever, reranker hook) and Spec-as-Code workflow runtime.
+  - Guardrails framework (YAML + Markdown) applied at platform, workflow, and agent levels.
+  - MCP connectivity stub with demo tools plus A2A protocol scaffold.
+  - Telemetry hooks with optional MLflow and Langfuse wiring.
+  - Docker/K8s deployment stubs and basic tests.
 
-**Install Cookiecutter**
-```bash
-pip install cookiecutter
-```
+**When to use it**
+- You want a reproducible, documented starting point for agentic/RAG workloads.
+- You need a FastAPI surface plus CLI for experiments.
+- You want guardrails, MCP tools, telemetry, and Spec-as-Code workflows already wired.
 
-**Install Poetry**
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
+**When not to use it**
+- You need a minimal REST-only microservice without LLMs.
+- You cannot run Python 3.11+.
+- You need a language/stack other than Python.
 
-### ⚙️ Generating a New Project
+**Supported project types (select during prompts)**
+- Library/CLI: single-agent mode, no API.
+- API Service: FastAPI surface enabled.
+- SparkGen workflow project: RAG + agents + guardrails + Spec-as-Code runtime.
 
-Generate a new project using the Multiagentic Cookiecutter template:
+---
+
+## 2. Prerequisites
+
+- **Python**: 3.11+ (3.12 recommended). Ensure `python` points to this version.
+- **Cookiecutter**: `pip install cookiecutter` or `pipx install cookiecutter`.
+- **Poetry** (recommended): `curl -sSL https://install.python-poetry.org | python3 -`.
+  - If you prefer `pip`, you can still run `python -m venv .venv && source .venv/bin/activate && pip install -e .` after generation.
+- **Git**: for version control.
+- **Docker** (optional): to run the generated service in containers.
+- **Recommended IDE**: VS Code or PyCharm with these settings:
+  - Enable Python extension/plug-in.
+  - Auto-format on save (Black or your preferred formatter).
+  - YAML schema support for `config/workflow.example.yaml` (schema export command below).
+
+---
+
+## 3. Quick Start (zero → running project)
+
+### 3.1 Generate from the template
 ```bash
 cookiecutter https://github.com/Praveengovianalytics/SparkGen.git
 ```
-You will be prompted to enter various details:
-- `project_name`: The name of your new project.
-- `project_slug`: [Automatically generated based on `project_name`]
-- `author_name`: Your name.
-- `description`: A short description of your project.
-- `version`: Initial version number.
-- `open_source_license`: Choose a license.
-- `ci_cd_tool`: Choose a CI/CD tool (e.g., GitHub Actions).
-- `deployment_platform`: Choose a deployment platform (e.g., Docker, Kubernetes).
-- `multi_agent_mode`: Choose between router-manager, planner-builder, or single-agent.
-- `api_framework`: Pick FastAPI to bootstrap an API surface or None for CLI-first.
-- `observability`: Choose Logging only or OpenTelemetry-ready wiring.
-- `openai_agent_sdk`: Enable to scaffold OpenAI Agents SDK usage (router and planner flows can delegate to Agents).
-- MCP connectivity and A2A protocol scaffolds are included to accelerate
-  multi-agent interoperability and context sharing out of the box.
 
-If you select **FastAPI**, the generated project includes `api/app.py` with
-`/health` and `/agent/invoke` endpoints; run with:
-```bash
-uvicorn {{cookiecutter.project_slug}}.api.app:app --reload
+### 3.2 Example interactive answers
+```
+project_name [My GenAI Project]: Demo Agentic App
+project_slug [demo_agentic_app]:
+author_name [Your Name]: Ada Lovelace
+description [A short description of the project.]: Demo of SparkGen workflow
+version [0.1.0]:
+open_source_license: 1 - BSD-3-Clause
+ci_cd_tool: 1 - GitHub Actions
+deployment_platform: 0 - Docker
+multi_agent_mode: 0 - router-manager
+api_framework: 0 - FastAPI
+observability: 1 - OpenTelemetry-ready
+openai_agent_sdk: 1 - enabled
 ```
 
-### 🧭 Usage Steps
-1. **Generate** a project with Cookiecutter.
-2. **Install deps** inside the generated folder:
-   ```bash
-   cd your_project_slug
-   poetry install
-   ```
-3. **Run CLI entrypoint** (single-agent by default):
-   ```bash
-   poetry run python your_project_slug/main.py
-   ```
-4. **Run FastAPI service** (if selected):
-   ```bash
-   uvicorn your_project_slug.api.app:app --reload
-   ```
-5. **Call the API**:
-   ```bash
-   curl -X POST http://localhost:8000/agent/invoke -H "Content-Type: application/json" -d '{"query":"hello","pattern":"single-agent"}'
-   ```
-6. **Switch orchestration patterns** by changing `pattern` (e.g., `router-manager`, `sequential`, `planner-executor`, `hierarchical`, `broadcast-reduce`, `critic-review`, `tool-first`).
+### 3.3 What gets created (high level)
+- Project folder named after `project_slug` containing:
+  - Python package with agents, tools, orchestration, telemetry, guardrails, and MCP connectors.
+  - `api/app.py` (if FastAPI chosen), `config/workflow.example.yaml`, guardrails, prompts, contexts, docs, and tests.
+  - Deployment stubs (`ci_cd/`), `.github/workflows/` placeholders, and evaluation helpers.
 
----
-
-## 🔬 Table of Contents
-- [✨ Features](#features)
-- [🏃‍♂️ Quickstart](#quickstart)
-  - [🔍 Prerequisites](#prerequisites)
-  - [📝 Installation](#installation)
-  - [⚙️ Generating a New Project](#generating-a-new-project)
-- [🔮 Project Structure](#project-structure)
-  - [🕹️ Key Directories and Files](#key-directories-and-files)
-- [🌐 Usage](#usage)
-  - [🚀 Running the Application](#running-the-application)
-- [🔄 Examples](#examples)
-- [🚨 Development](#development)
-  - [🔧 Testing](#testing)
-  - [♻️ Continuous Integration](#continuous-integration)
-- [🚧 Deployment](#deployment)
-  - [🛠️ Docker Deployment](#docker-deployment)
-  - [🚀 Kubernetes Deployment](#kubernetes-deployment)
-- [👁‍□️ Responsible AI Practices](#responsible-ai-practices)
-- [📊 Contributing](#contributing)
-- [🌐 License](#license)
-- [📞 Contact](#contact)
-- [🔗 Acknowledgments](#acknowledgments)
-- [🔍 Frequently Asked Questions](#frequently-asked-questions)
-- [⌛ Change Log](#change-log)
-
----
-
-## ✨ Features
-- **Modular Project Structure**: Organized directories and modules for scalability and maintainability.
-- **LLM Integration**: Seamless integration with Large Language Models (LLMs) like OpenAI GPT.
-- **Prompt Engineering**: Template-based prompt management using Jinja2.
-- **Embeddings Support**: Efficient handling of embeddings for semantic similarity.
-- **Vector Databases**: Integration with vector databases for storing and retrieving embeddings.
-- **Custom Tools and Utilities**: Extendable tools for specific tasks.
-- **Memory Management**: Contextual memory for conversational agents.
-- **Callbacks and Telemetry**: Hooks and monitoring for various stages of processing.
-- **CI/CD Integration**: Ready-to-use GitHub Actions workflows for continuous integration and deployment.
-- **Responsible AI Modules**: Components for bias detection, privacy preservation, and explainability.
-- **Docker and Kubernetes Support**: Containerization and orchestration for scalable deployments.
-- **Poetry for Dependency Management**: Simplified dependency management and virtual environment handling.
-
----
-
-## 🔮 Project Structure
-
-The cookiecutter generates a single, production-ready layout with clear separation between orchestration, interfaces, and infrastructure. Optional components (e.g., FastAPI, Kubernetes) appear only when selected during project generation.
-
-```plaintext
-your_project_slug/
-├── your_project_slug/
-│   ├── agents/
-│   ├── prompt/
-│   ├── llms/
-│   ├── tools/
-│   ├── memory/
-│   ├── callbacks/
-│   ├── utils/
-│   ├── telemetry/
-│   ├── config/
-│   ├── data_loaders/
-│   ├── retrievers/
-│   ├── embeddings/
-│   ├── vectordatabase/
-│   ├── orchestration/
-│   ├── guardrails/
-│   ├── protocols/
-│   ├── connectors/
-│   ├── __init__.py
-│   └── main.py
-├── api/                     # FastAPI surface (if selected)
-├── ResponsibleAI/
-├── docs/
-├── notebooks/
-├── tests/
-├── ci_cd/
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── deployment/
-│       ├── kubernetes.yml
-│       └── helm-chart/
-├── .github/
-│   └── workflows/
-├── logs/
-├── pyproject.toml
-├── poetry.lock
-├── LICENSE
-├── README.md
-├── Makefile
-└── .gitignore
-```
-
-### 🕹️ Key Directories and Files
-- **`your_project_slug/agents/`**: Agent definitions and orchestration flows.
-- **`your_project_slug/prompt/`**: Prompt templates and Jinja2 assets.
-- **`your_project_slug/tools/`**: Tool specs/functions for external actions.
-- **`your_project_slug/memory/`**: State and memory abstractions.
-- **`your_project_slug/telemetry/`**: Logging, tracing, and monitoring hooks.
-- **`your_project_slug/orchestration/`**: Coordination patterns (planner, router, sequential, etc.).
-- **`your_project_slug/guardrails/`**: Safety and policy enforcement utilities.
-- **`your_project_slug/protocols/`**: Agent-to-agent or service communication protocols.
-- **`your_project_slug/connectors/`**: Integrations such as MCP client stubs.
-- **`your_project_slug/data_loaders/`, `retrievers/`, `embeddings/`, `vectordatabase/`**: Data ingestion and retrieval building blocks.
-- **`your_project_slug/main.py`**: CLI entrypoint for running the selected orchestration mode.
-- **`api/`**: FastAPI surface for `/health` and `/agent/invoke` (generated when FastAPI is chosen).
-- **`ResponsibleAI/`**: Bias detection, privacy preservation, and explainability modules.
-- **`ci_cd/`**: Docker, Compose, and Kubernetes deployment scaffolds.
-- **`tests/`**: Unit and integration tests for agents, protocols, and tools.
-- **`docs/` & `notebooks/`**: Extended documentation and runnable examples.
-
----
-
-## 🌐 Usage
-
-### 🚀 Running the Application
-
-Navigate to the project directory:
+### 3.4 Run immediately
 ```bash
-cd your_project_slug
-```
-
-Install dependencies using Poetry:
-```bash
+cd demo_agentic_app
 poetry install
+
+# Run the legacy CLI (single-agent by default or use --pattern)
+poetry run python demo_agentic_app/main.py --pattern single-agent --query "Hello!"
+
+# Run Spec-as-Code workflow (preferred)
+poetry run python demo_agentic_app/main.py run config/workflow.example.yaml --query "Summarize SparkGen"
+
+# Start FastAPI (if selected)
+uvicorn demo_agentic_app.api.app:app --reload
 ```
 
-Activate the virtual environment:
+---
+
+## 4. Template Options
+
+Every Cookiecutter prompt is listed below. Defaults shown in brackets.
+
+| Prompt | What it controls | Allowed values |
+| --- | --- | --- |
+| `project_name` | Human-readable project title. | Any string. |
+| `project_slug` | Package/directory name (auto-filled from name). | Lowercase/underscored string. |
+| `author_name` | Package author metadata. | Any string. |
+| `description` | Short project description. | Any string. |
+| `version` | Initial package version. | SemVer (default `0.1.0`). |
+| `open_source_license` | LICENSE content. | `MIT` (default), `BSD-3-Clause`, `No license file`. |
+| `ci_cd_tool` | CI/CD placeholder files. | `GitHub Actions` (default), `GitLab CI/CD`, `Jenkins`, `None`. |
+| `deployment_platform` | Deployment hints in docs/stubs. | `Docker` (default), `Kubernetes`, `AWS`, `Azure`, `GCP`, `None`. |
+| `multi_agent_mode` | Default orchestration mode. | `router-manager` (default), `planner-builder`, `single-agent`. |
+| `api_framework` | Whether to scaffold FastAPI. | `FastAPI` (default), `None`. |
+| `observability` | Telemetry wiring level. | `Logging only` (default), `OpenTelemetry-ready`. |
+| `openai_agent_sdk` | OpenAI Agents SDK toggle. | `disabled` (default), `enabled`. |
+
+> **NOTE**: MCP connectivity, Spec-as-Code workflows, guardrails, telemetry, RAG components, and A2A protocol scaffolds are always included.
+
+### Recipes
+
+1. **Minimal library/CLI**
+   - `multi_agent_mode=single-agent`
+   - `api_framework=None`
+   - `observability=Logging only`
+   - `ci_cd_tool=None`, `deployment_platform=None`
+   - Run with: `poetry run python <slug>/main.py --pattern single-agent --query "Hello"`
+
+2. **API service (FastAPI)**
+   - `api_framework=FastAPI`
+   - Any `multi_agent_mode`
+   - Start server: `uvicorn <slug>.api.app:app --reload`
+   - Smoke test: `curl -X POST http://localhost:8000/agent/invoke -H "Content-Type: application/json" -d '{"query":"ping"}'`
+
+3. **SparkGen workflow project (RAG + Agents + Guardrails)**
+   - `multi_agent_mode=router-manager` (default) or `planner-builder`
+   - Keep `api_framework` as you prefer
+   - Use Spec-as-Code: `poetry run python <slug>/main.py run config/workflow.example.yaml --query "Summarize"`
+   - Export schema for IDEs: `poetry run python <slug>/main.py schema --output workflow.schema.json`
+   - Scaffold a new workflow: `poetry run python <slug>/main.py init --template rag_agentic --output ./my-workflow`
+
+### Optional toggles at a glance
+- **CI/CD**: `.github/workflows/ci.yml` and `cd.yml` stubs are generated (fill in your jobs). Other CI selections act as placeholders you can adapt.
+- **Docker/K8s**: `ci_cd/Dockerfile`, `ci_cd/docker-compose.yml`, `ci_cd/deployment/kubernetes.yml` are always scaffolded.
+- **Tests**: `tests/` includes starters for agents, MCP, API, and workflow loader.
+- **Docs**: `docs/` holds specs and playbooks for orchestration and operations.
+- **MCP tools**: configurable via `config/mcp_connectors.yaml` and surfaced to agents.
+- **Memory/Vector store**: in-memory defaults with configuration in `workflow.example.yaml`.
+
+---
+
+## 5. Project Structure Walkthrough
+
+After generation your project looks like this (top-level only):
+
+```
+<project_slug>/
+├── .github/workflows/          # CI/CD stubs (adjust per selected tool)
+├── ci_cd/                      # Docker, Compose, K8s manifests
+├── config/                     # Spec-as-Code example + MCP config
+├── contexts/                   # Context blocks referenced by workflows
+├── docs/                       # Specs (orchestration, operations, testing)
+├── guardrails/                 # Default rules + docs
+├── prompts/                    # Agent prompt markdown
+├── tests/                      # Pytest suites for agents, MCP, API, spec loader
+├── {{project_slug}}/           # Python package with runtime code
+└── ... (LICENSE, README, pyproject, poetry.lock, Makefile)
+```
+
+Key package modules:
+- `{{project_slug}}/main.py`: CLI front door (`run`, `init`, `schema`, legacy patterns).
+- `{{project_slug}}/api/app.py`: FastAPI app with `/health` and `/agent/invoke` (if API selected).
+- `{{project_slug}}/agents/`: Agent implementations plus evaluation agent.
+- `{{project_slug}}/orchestration/`: Patterns (`patterns.py`) and Spec-as-Code runtime (`spec_runtime.py`).
+- `{{project_slug}}/config/`: Config loader, Spec-as-Code models/loader/templates.
+- `{{project_slug}}/guardrails/`: Rule definitions, resolver, guardrail manager.
+- `{{project_slug}}/connectors/`: MCP client stub + tool generation.
+- `{{project_slug}}/retrievers`, `embeddings`, `vectordatabase`: RAG building blocks.
+- `{{project_slug}}/telemetry/`: Telemetry hooks, MLflow/Langfuse optional wiring.
+- `{{project_slug}}/tools/`: Built-in tools plus MCP-derived tool registry.
+- `{{project_slug}}/prompt/`: Jinja prompt template helper.
+
+**Inside `{{project_slug}}/` (detailed view)**
+```
+{{project_slug}}/
+├── main.py                   # CLI entrypoint (run/init/schema/legacy patterns)
+├── api/
+│   └── app.py                # FastAPI app with /health and /agent/invoke (optional)
+├── agents/
+│   ├── agent.py              # Core Agent + RouterManager implementations
+│   └── eval_agent.py         # EvaluationAgent wrapper for RAG evaluator
+├── orchestration/
+│   ├── patterns.py           # Sequential, router, planner, hierarchical, critic-review, tool-first, broadcast-reduce
+│   └── spec_runtime.py       # Builds agents/tools/guardrails from workflow.yaml and runs handoffs
+├── config/
+│   ├── config_loader.py      # Env/.env loader + MCP tooling assembly
+│   ├── spec_loader.py        # YAML loader, env overrides, validation (prompts/tools/handoffs/guardrails)
+│   ├── spec_models.py        # Pydantic models + JSON Schema export
+│   ├── spec_templates.py     # `init --template` copier (rag_agentic)
+│   └── templates/            # Starter workflow.yaml and prompts/contexts for init
+├── guardrails/
+│   ├── default_guardrails.yaml # Platform sets
+│   ├── resolver.py           # Merge/validate guardrail sets and docs
+│   ├── policies.py           # GuardrailManager + builders
+│   ├── workflow.md           # Workflow-specific rationale (example)
+│   └── agents/               # Agent-specific guardrail docs (optional)
+├── connectors/
+│   └── mcp_client.py         # MCP gateway/tool loader, demo resources, tool spec builder
+├── tools/
+│   └── tools.py              # Built-in tools + MCP assembly helper
+├── prompt/
+│   └── prompt_template.py    # Jinja prompt helper (extend with your own templates)
+├── telemetry/
+│   └── telemetry.py          # Telemetry hooks (requests + optional MLflow/Langfuse)
+├── retrievers/
+│   └── retriever.py          # Thin wrapper over vector store
+├── embeddings/
+│   └── embedder.py           # Deterministic, dependency-light embedder
+├── vectordatabase/
+│   └── vector_store.py       # In-memory vector store with cosine similarity
+├── memory/
+│   └── memory.py             # Chat history persistence (TTL/summarization)
+├── evaluation/
+│   └── evaluator.py          # RAG evaluator used by EvaluationAgent
+├── protocols/
+│   └── a2a_protocol.py       # Agent-to-agent messaging scaffold
+├── reranker/
+│   └── reranker.py           # Reranker hook (stub/local)
+└── llms/
+    └── base_llm.py           # OpenAI chat + Agents SDK scaffold
+```
+
+Where to edit:
+- **Prompts/contexts**: `prompts/*.md`, `contexts/*.md`, and `config/templates/rag_agentic/prompts|contexts` for new workflow templates.
+- **Workflows/specs**: `config/workflow.example.yaml` or new files under `config/templates/` (use `main.py init ...`).
+- **Tools/connectors**: `config/mcp_connectors.yaml` for MCP gateways/tools; `tools/tools.py` for built-ins.
+- **Guardrails**: `guardrails/default_guardrails.yaml`, `guardrails/workflow.md`, `guardrails/agents/*.md`.
+- **Tests**: `tests/` (e.g., `tests/test_agent_flow.py`, `tests/test_api_integration.py`).
+
+---
+
+## 6. Development Workflow
+
+### 6.1 Create a virtual environment and install deps
 ```bash
-poetry shell
+cd <project_slug>
+poetry install
+# or, without Poetry
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
 ```
 
-Run the application:
+### 6.2 Run unit tests, lint, and format
+- Tests: `poetry run pytest`
+- Formatting/linting: add your preferred tools (Black/ruff/flake8) and run via `poetry run <tool>`.
+
+### 6.3 Run locally
+- **Legacy/quick agent run**: `poetry run python <slug>/main.py --pattern router-manager --query "Plan a release"`
+- **Spec-as-Code workflow**: `poetry run python <slug>/main.py run config/workflow.example.yaml --env dev --query "Summarize"`
+- **Export workflow schema** (for IDE validation): `poetry run python <slug>/main.py schema --output workflow.schema.json`
+- **Bootstrap a new workflow folder**: `poetry run python <slug>/main.py init --template rag_agentic --output ./my-workflow`
+
+### 6.4 Run the FastAPI service (if enabled)
 ```bash
-poetry run python your_project_slug/main.py
+uvicorn <slug>.api.app:app --reload
+curl -X POST http://localhost:8000/agent/invoke -H "Content-Type: application/json" -d '{"query":"hello","pattern":"single-agent"}'
 ```
 
+### 6.5 Versioning and release
+- Bump `version` in `pyproject.toml` (and `README` badges if you add them) before tagging.
+- Build with `poetry build` and publish with your chosen registry tooling.
+
 ---
 
-## 🔄 Examples
-- **Jupyter Notebooks**: Explore the `notebooks/` directory for example notebooks demonstrating usage of different components.
-- **Command-Line Arguments**: Modify `main.py` to accept command-line arguments for different modes or functionalities.
+## 7. Configuration & Environments
 
-### Example: Run the single-agent CLI
-```bash
-poetry run python your_project_slug/main.py --pattern single-agent --query "Summarize today's news"
+### 7.1 Environment variables and `.env`
+Supported environment variables (load from `.env` thanks to `python-dotenv`):
+- `LLM_API_KEY` (required for OpenAI calls)
+- `LLM_MODEL_NAME` (default `gpt-4o-mini`)
+- `MULTI_AGENT_MODE`, `API_FRAMEWORK`, `OBSERVABILITY`
+- `OPENAI_AGENT_SDK` (`enabled`/`disabled`), `OPENAI_AGENT_ID`
+- Telemetry: `TELEMETRY_ENDPOINT`, `MLFLOW_TRACKING_URI`, `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`
+- Guardrails: `GUARDRAIL_BANNED_TERMS`, `GUARDRAIL_MAX_OUTPUT_LEN`
+- MCP config path override: `MCP_CONFIG_PATH`
+
+Example `.env`:
+```
+LLM_API_KEY=sk-...
+LLM_MODEL_NAME=gpt-4o-mini
+MULTI_AGENT_MODE=router-manager
+API_FRAMEWORK=FastAPI
+OBSERVABILITY=OpenTelemetry-ready
+LANGFUSE_HOST=https://cloud.langfuse.com
+LANGFUSE_PUBLIC_KEY=...
+LANGFUSE_SECRET_KEY=...
 ```
 
-### Example: Switch to router-manager orchestration
-```bash
-poetry run python your_project_slug/main.py --pattern router-manager --query "Create a trip plan for Tokyo"
+### 7.2 Workflow overrides (dev/staging/prod)
+- Use the `environments` map in `config/workflow.example.yaml` (or your workflow) to override values by environment (e.g., increase `rag.top_k` or change `llm.model`).
+- Run with `--env staging` to apply the override.
+
+### 7.3 Secrets guidance
+- Keep secrets out of git: reference them as `${ENV_VAR}` in `workflow.yaml` and `config/mcp_connectors.yaml`.
+- Do not commit `.env`; use vaults/secret managers for shared environments.
+
+---
+
+## 8. CI/CD
+
+- **Included pipelines**: `.github/workflows/ci.yml` and `cd.yml` are stubs—fill them with your jobs. Other CI choices (GitLab/Jenkins) are placeholders you can adapt.
+- **Local parity**: run `poetry run pytest` locally; add lint/format commands to match your CI as you extend it.
+- **Adding jobs**: edit the workflow YAMLs or create new ones under `.github/workflows/`. Reference `ci_cd/Dockerfile` or `ci_cd/docker-compose.yml` for build steps, and `ci_cd/deployment/kubernetes.yml` for K8s deploy examples.
+
+---
+
+## 9. Common Tasks
+
+- **Add a new module/package**: create a Python file under `<slug>/` (e.g., `<slug>/utils/feature_flags.py`) and import it where needed. Add tests in `tests/`.
+- **Add a new API endpoint**: edit `<slug>/api/app.py`, add a FastAPI route, and cover it in `tests/test_api_integration.py`.
+- **Add a new workflow YAML**: copy `config/workflow.example.yaml` or run `poetry run python <slug>/main.py init --template rag_agentic --output ./workflows/my_workflow` then edit prompts/contexts.
+- **Add a new agent prompt (.md)**: create `prompts/<agent>.md`, update `contexts/*.md` if needed, and register the agent in your workflow under `agents[]` with `prompt_file`/`context_file`.
+- **Add guardrails**: edit `guardrails/default_guardrails.yaml` for platform sets; add workflow-level sets under `guardrails` in your `workflow.yaml`; document rationale in `guardrails/README.md` and `guardrails/agents/*.md`.
+- **Add a new MCP tool entry**: update `config/mcp_connectors.yaml` (or your custom file) with a gateway/tool, mark `active: true`, and include the generated tool name in `tools.exposed_mcp_tools` and the relevant agent `tools[]` list.
+- **Add a new storage backend config**: adjust `storage.vector_store` or `storage.document_store` in your workflow YAML, using `${ENV_VAR}` for credentials. Implement adapters in `vectordatabase/` or `retrievers/` if needed.
+- **Add evaluation scripts**: extend `evaluate_api.py` for API-level checks or add new evaluators under `<slug>/evaluation/`, then wrap them in an agent similar to `EvaluationAgent`.
+
+---
+
+## 10. Troubleshooting / FAQ
+
+- **Cookiecutter command not found**: install via `pip install cookiecutter` or `pipx install cookiecutter`, then rerun the command.
+- **Python version mismatch**: ensure `python --version` is 3.11+; recreate your virtual environment after switching.
+- **`poetry install` errors**: delete `.venv` (if any), ensure Python headers are present, and retry. You can fall back to `pip install -e .`.
+- **Tests failing**: run `poetry run pytest -k <testname> -vv` for detail. Check env vars (LLM_API_KEY, MCP_* tokens) and file paths referenced in failures.
+- **Generated service won't start**:
+  - Confirm dependencies installed (`poetry install`).
+  - For FastAPI, ensure `uvicorn` is installed (`poetry install` already includes it when API enabled).
+  - Verify `config/workflow.example.yaml` paths exist (prompts/contexts) and env vars are set.
+- **Spec validation errors**: the loader checks prompt/context files, guardrail docs, tool names, and circular handoffs. Fix the reported path or reference and rerun.
+
+---
+
+## 11. Examples (copy/paste starters)
+
+### Workflow YAML (Spec-as-Code starter)
+```yaml
+# config/workflow.example.yaml
+version: v1
+name: sparkgen-example
+entry_agent: researcher
+environment: dev
+
+rag:
+  enabled: true
+  top_k: 4
+
+tools:
+  builtin:
+    - get_delivery_date
+  mcp_connectors:
+    - name: demo
+      host: localhost
+      port: 9999
+      protocol: ws
+      active: true
+      credentials:
+        token: ${MCP_DEMO_TOKEN}
+      tools:
+        - name: demo.calculator
+          resource: demo.calculator
+  exposed_mcp_tools:
+    - mcp__demo__demo_calculator
+
+agents:
+  - name: researcher
+    role: "Research-first agent that gathers facts with citations."
+    prompt_file: ../prompts/researcher.md
+    context_file: ../contexts/default.md
+    tools:
+      - mcp__demo__demo_calculator
+    memory:
+      short_term: true
+      long_term: true
+    guardrails:
+      use_sets:
+        - workflow_rag
+      overrides:
+        - name: researcher_sensitive_terms
+          description: "Block sharing secrets or passwords."
+          categories: ["policy", "privacy"]
+          applies_to: ["output"]
+          mode: block
+          severity: high
+          priority: 8
+          patterns:
+            - "(secret|password)"
+          message_templates:
+            refusal: "I cannot disclose secrets or passwords."
+    handoff_notes: "Return 3-5 bullet summary with citations."
+  - name: coder
+    role: "Implementation agent that produces steps and patches."
+    prompt_file: ../prompts/coder.md
+    context_file: ../contexts/default.md
+    tools:
+      - get_delivery_date
+    guardrails:
+      use_sets:
+        - platform_defaults
+      overrides: []
+
+handoffs:
+  - source: researcher
+    target: coder
+    trigger: always
+    message_contract: "Summary + citations + recommended next actions."
 ```
 
-### Example: Call the FastAPI endpoint
-```bash
-uvicorn your_project_slug.api.app:app --reload &
-curl -X POST http://localhost:8000/agent/invoke \\
-  -H "Content-Type: application/json" \\
-  -d '{"query":"Draft a blog outline about SparkGen","pattern":"single-agent"}'
+### Prompt markdown (agent persona)
+```markdown
+<!-- prompts/researcher.md -->
+You are **Researcher**, a fact-first agent.
+- Cite sources when possible.
+- Prefer concise bullet lists (3-5 bullets).
+- If unsure, state the uncertainty and propose how to verify.
 ```
 
----
-
-## 🚨 Development
-
-### 🔧 Testing
-Run tests using Pytest:
-```bash
-poetry run pytest tests/
-```
-Ensure that you have adequate test coverage for all modules.
-
-### ♻️ Continuous Integration
-- **GitHub Actions**: The template includes CI workflows for automated testing and deployment.
-- **Code Quality**: Integrate tools like `flake8`, `black`, and `isort` for code linting and formatting.
-
----
-
-## 🚧 Deployment
-
-### 🛠️ Docker Deployment
-Build and run the Docker image:
-```bash
-docker build -t your_project_slug .
-docker run -p 8000:8000 your_project_slug
+```markdown
+<!-- prompts/coder.md -->
+You are **Coder**, focused on actionable implementation steps.
+- Return short, numbered steps.
+- Include code snippets when helpful.
+- Ask for missing inputs before proceeding if requirements are unclear.
 ```
 
-### 🚀 Kubernetes Deployment
-Apply the Kubernetes manifest:
-```bash
-kubectl apply -f ci_cd/deployment/kubernetes.yml
+### Guardrails (defaults + workflow)
+```yaml
+# guardrails/default_guardrails.yaml
+allowed_categories:
+  - policy
+  - privacy
+  - citations
+  - constraints
+apply_sets:
+  - platform_defaults
+sets:
+  - name: platform_defaults
+    description: "Baseline platform guardrails."
+    rules:
+      - name: pii_redaction
+        categories: ["privacy"]
+        applies_to: ["output"]
+        mode: redact
+        severity: critical
+        priority: 5
+        patterns:
+          - "(?i)(ssn|social security|credit card)"
 ```
 
----
+```yaml
+# guardrails/workflow.md (referenced in workflow YAML)
+# Document workflow-specific rationale and examples here.
+```
 
-## 👁‍□️ Responsible AI Practices
-We are committed to building AI responsibly:
-
-- **Bias Detection**: Implemented in `ResponsibleAI/bias_detection.py`.
-  - Regularly audits model outputs for fairness.
-- **Privacy Preservation**: Data anonymization techniques in `ResponsibleAI/privacy_preservation.py`.
-  - Compliance with data protection regulations.
-- **Explainability**: Model interpretability methods in `ResponsibleAI/explainability.py`.
-  - Use of SHAP values for feature importance.
-
-For more details, refer to `docs/responsible_ai.md`.
+> **Tip**: Keep prompts and guardrails in the same folders referenced by your workflow YAML so validation succeeds, and use `${ENV_VAR}` placeholders for any secrets in YAML.
 
 ---
 
-## 📊 Contributing
+## 11. Appendix
 
-### 🌈 How to Contribute
-1. **Fork the Repository.**
-2. **Create a Feature Branch:**
-   ```bash
-   git checkout -b feature/YourFeature
-   ```
-3. **Commit Your Changes:**
-   ```bash
-   git commit -m "Add YourFeature"
-   ```
-4. **Push to the Branch:**
-   ```bash
-   git push origin feature/YourFeature
-   ```
-5. **Open a Pull Request.**
+**Glossary**
+- **Cookiecutter**: tool that asks prompts and generates a project folder from this template.
+- **Poetry**: dependency and packaging manager used by the generated project.
+- **pre-commit**: git hook manager (not preconfigured—add if you need automated formatting/checks).
+- **MCP (Model Context Protocol)**: standard for exposing tools/resources to LLMs; configured via `config/mcp_connectors.yaml`.
+- **RAG (Retrieval-Augmented Generation)**: pattern combining retrieval (embeddings/vector store) with generation.
+- **Guardrails**: safety/policy rules enforced on inputs/outputs/tool calls, defined in YAML/Markdown.
+- **A2A protocol**: agent-to-agent messaging scaffold in `protocols/a2a_protocol.py`.
 
-### 🔜 Code of Conduct
-Please read our Code of Conduct before contributing.
-
----
-
-## 🌐 License
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-## 📞 Contact
-- **Author**: Praveen Govindaraj   
-- **Email**: praveengovi@gmail.com
-- **GitHub**: [link](https://github.com/Praveengovianalytics)
-- **Project Repository**: [SparkGen](https://github.com/Praveengovianalytics/SparkGen)
-
----
-
-## 🔗 Acknowledgments
-- **Contributors**: Thanks to all the contributors who have helped improve this project.
-- **Libraries and Tools**: This project leverages open-source libraries like Cookiecutter, Poetry, OpenAI API, Jinja2, and others.
-
----
-
-## 🔍 Frequently Asked Questions
-1. **How do I change the LLM model used?**
-   - Configure the LLM model in `config/config_loader.py` or set it via environment variables.
-2. **Can I use this project for commercial purposes?**
-   - Yes, this project is licensed under the MIT License, which allows commercial use. Refer to the `LICENSE` file for details.
-3. **How do I report bugs or request features?**
-   - Open an issue on the [GitHub Issues](https://github.com/Praveengovianalytics/SparkGen/issues) page.
-4. **How can I extend the template to suit my needs?**
-   - Modify the template files in the generated project or customize the Cookiecutter template itself by forking the repository.
-
----
-
-## ⌛ Change Log
-
-To be Updated
-
----
-
-By using SparkGen ✨, you're accelerating your Gen AI development with a solid foundation and best practices. 🚀 Happy coding!
+> **You’re set.** Run the quick start commands, customize `workflow.example.yaml`, and start shipping agentic features.
