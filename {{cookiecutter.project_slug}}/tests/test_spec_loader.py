@@ -3,18 +3,53 @@ from pathlib import Path
 import pytest
 import yaml
 
-from {{ cookiecutter.project_slug }}.config.spec_loader import SpecValidationError, WorkflowSpecLoader
+from {{ cookiecutter.project_slug }}.config.errors import SpecValidationError
+from {{ cookiecutter.project_slug }}.config.spec_loader import WorkflowSpecLoader
 
 
 def _write_basic_files(tmp_path: Path) -> Path:
     prompts_dir = tmp_path / "prompts"
     contexts_dir = tmp_path / "contexts"
+    guardrails_dir = tmp_path / "guardrails"
+    agents_docs_dir = guardrails_dir / "agents"
     prompts_dir.mkdir()
     contexts_dir.mkdir()
+    guardrails_dir.mkdir()
+    agents_docs_dir.mkdir()
     prompt_path = prompts_dir / "agent.md"
     context_path = contexts_dir / "context.md"
     prompt_path.write_text("You are an agent.")
     context_path.write_text("Context block.")
+    (guardrails_dir / "README.md").write_text("Guardrail docs.")
+    (guardrails_dir / "workflow.md").write_text("Workflow guardrails.")
+    (agents_docs_dir / "a1.md").write_text("Agent A1 guardrails.")
+
+    default_guardrails = {
+        "allowed_categories": ["safety"],
+        "documentation": "guardrails/README.md",
+        "workflow_doc": "guardrails/workflow.md",
+        "apply_sets": ["baseline"],
+        "sets": [
+            {
+                "name": "baseline",
+                "docs": "guardrails/README.md",
+                "rules": [
+                    {
+                        "name": "empty_input",
+                        "description": "Block empty input.",
+                        "categories": ["safety"],
+                        "applies_to": ["input"],
+                        "mode": "block",
+                        "severity": "medium",
+                        "priority": 1,
+                        "patterns": ["^\\s*$"],
+                        "tests": [{"prompt": "", "expected_outcome": "block"}],
+                    }
+                ],
+            }
+        ],
+    }
+    (guardrails_dir / "default_guardrails.yaml").write_text(yaml.safe_dump(default_guardrails))
 
     spec = {
         "version": "v1",
@@ -22,6 +57,13 @@ def _write_basic_files(tmp_path: Path) -> Path:
         "description": "spec test",
         "entry_agent": "a1",
         "environment": "dev",
+        "guardrails": {
+            "defaults_path": "guardrails/default_guardrails.yaml",
+            "documentation": "guardrails/README.md",
+            "workflow_doc": "guardrails/workflow.md",
+            "apply_sets": ["baseline"],
+            "sets": [],
+        },
         "rag": {
             "enabled": False,
             "retriever": "in_memory",
@@ -49,7 +91,7 @@ def _write_basic_files(tmp_path: Path) -> Path:
                 "context_file": str(context_path.relative_to(tmp_path)),
                 "tools": ["get_delivery_date"],
                 "memory": {"short_term": True, "long_term": False},
-                "guardrails": {"banned_terms": [], "max_output_len": 1200},
+                "guardrails": {"use_sets": ["baseline"], "overrides": [], "doc": "guardrails/agents/a1.md"},
             }
         ],
         "handoffs": [],
@@ -110,7 +152,7 @@ def test_circular_handoff_detection(tmp_path: Path):
             "context_file": data["agents"][0]["context_file"],
             "tools": ["get_delivery_date"],
             "memory": {"short_term": True, "long_term": False},
-            "guardrails": {"banned_terms": [], "max_output_len": 1200},
+            "guardrails": {"use_sets": ["baseline"], "overrides": [], "doc": "guardrails/agents/a1.md"},
         }
     )
     data["handoffs"] = [{"source": "a1", "target": "a2", "trigger": "always"}, {"source": "a2", "target": "a1"}]

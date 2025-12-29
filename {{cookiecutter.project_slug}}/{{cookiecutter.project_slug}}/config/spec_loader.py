@@ -11,15 +11,13 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+from {{ cookiecutter.project_slug }}.config.errors import SpecValidationError
 from {{ cookiecutter.project_slug }}.connectors.mcp_client import _normalize_name
 from {{ cookiecutter.project_slug }}.config.spec_models import (
     WorkflowOverrides,
     WorkflowSpec,
 )
-
-
-class SpecValidationError(ValueError):
-    """Raised when the workflow spec fails validation."""
+from {{ cookiecutter.project_slug }}.guardrails.resolver import GuardrailResolver
 
 
 def _deep_merge(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
@@ -62,6 +60,7 @@ class WorkflowSpecLoader:
         self._validate_prompts_and_context(spec)
         self._validate_tool_references(spec)
         self._validate_handoffs(spec)
+        self._validate_guardrails(spec)
         return spec
 
     def _validate_prompts_and_context(self, spec: WorkflowSpec) -> None:
@@ -118,6 +117,14 @@ class WorkflowSpecLoader:
         for node in adjacency:
             if not visited.get(node, False) and _cycle(node):
                 raise SpecValidationError("Circular agent handoff detected in workflow.")
+
+    def _validate_guardrails(self, spec: WorkflowSpec) -> None:
+        resolver = GuardrailResolver(self.base_dir)
+        defaults_cfg, default_set_names = resolver.load_defaults(spec.guardrails.defaults_path)
+        merged_cfg, default_set_names = resolver.merge_configs(defaults_cfg, spec.guardrails)
+        resolver.validate_docs(merged_cfg, [agent.guardrails for agent in spec.agents])
+        for agent_cfg in spec.agents:
+            resolver.resolve_agent_rules(merged_cfg, default_set_names, agent_cfg.guardrails)
 
     def export_schema(self) -> Dict[str, Any]:
         """

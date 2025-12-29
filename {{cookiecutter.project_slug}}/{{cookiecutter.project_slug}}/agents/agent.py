@@ -37,7 +37,15 @@ class Agent:
 
     def prepare_tools(self) -> List[dict]:
         """Prepare and validate tools before executing the query."""
-        return [tool for tool in self._tools if tool.get("function")]
+        validated: List[dict] = []
+        for tool in self._tools:
+            if not tool.get("function"):
+                continue
+            name = tool["function"].get("name")
+            if name:
+                self._guardrails.check_tool(name, {})
+            validated.append(tool)
+        return validated
 
     def prepare_prompt(self, validated_tools: List[dict], formatted_history: str) -> str:
         """Prepare the final prompt by incorporating validated tools and formatted history."""
@@ -66,21 +74,21 @@ class Agent:
 
     def execute(self, user_query: str) -> Any:
         """Run the agent workflow: prepare prompt, query LLM, parse result."""
-        self._guardrails.run_pre(user_query)
+        sanitized_query = self._guardrails.check_input(user_query)
         if self._telemetry:
-            self._telemetry.log_event("agent_input", user_query)
+            self._telemetry.log_event("agent_input", sanitized_query)
         formatted_history = self.prepare_history()
         final_prompt = self.prepare_prompt(self._validated_tools, formatted_history)
         if self._use_agents_sdk:
-            llm_response = self._llm.agent_chat(user_query)
+            llm_response = self._llm.agent_chat(sanitized_query)
         else:
-            llm_response = self.query_llm(final_prompt, user_query)
+            llm_response = self.query_llm(final_prompt, sanitized_query)
         parsed = self.parse_output(llm_response)
         # Apply post-guardrails on stringified content.
         if isinstance(parsed, str):
-            parsed = self._guardrails.run_post(parsed)
+            parsed = self._guardrails.check_output(parsed)
         if self._memory:
-            self._memory.save_context(user_query, parsed if isinstance(parsed, str) else str(parsed))
+            self._memory.save_context(sanitized_query, parsed if isinstance(parsed, str) else str(parsed))
         if self._telemetry:
             self._telemetry.log_event("agent_output", str(parsed))
         return parsed

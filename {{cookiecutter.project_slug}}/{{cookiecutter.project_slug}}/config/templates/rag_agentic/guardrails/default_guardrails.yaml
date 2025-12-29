@@ -1,0 +1,107 @@
+allowed_categories:
+  - safety
+  - privacy
+  - policy
+  - jailbreak
+  - pii
+  - hallucination
+  - refusal_style
+  - citations
+  - tool_use_constraints
+  - constraints
+documentation: guardrails/README.md
+workflow_doc: guardrails/README.md
+apply_sets:
+  - platform_defaults
+sets:
+  - name: platform_defaults
+    description: "Platform-wide defaults for safety, privacy, and policy compliance."
+    docs: guardrails/README.md
+    rules:
+      - name: pii_redaction
+        description: "Redact common PII like emails or SSN-like formats."
+        categories: ["pii", "privacy"]
+        applies_to: ["input", "output"]
+        mode: "redact"
+        severity: "high"
+        priority: 10
+        patterns:
+          - "[0-9]{3}-[0-9]{2}-[0-9]{4}"
+          - "[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+"
+        tags: ["baseline", "pii"]
+        policy_references: ["privacy_baseline"]
+        message_templates:
+          refusal: "I’m not able to share sensitive personal information."
+          escalation: "PII detected; redacted automatically."
+        tests:
+          - prompt: "my email is test@example.com"
+            expected_outcome: "redact"
+      - name: credential_refusal
+        description: "Refuse to expose credentials, tokens, or OTP codes."
+        categories: ["safety", "policy"]
+        applies_to: ["input", "output"]
+        mode: "block"
+        severity: "critical"
+        priority: 1
+        patterns:
+          - "(otp|one[-\\s]?time\\s?password)"
+          - "(api|secret|token|key)[^\\w]?"
+        tags: ["baseline", "auth"]
+        policy_references: ["security_baseline"]
+        message_templates:
+          refusal: "I cannot help with credentials, OTPs, or secrets."
+          escalation: "Credentials request blocked."
+        tests:
+          - prompt: "Here is the otp: 123456"
+            expected_outcome: "block"
+      - name: jailbreak_detection
+        description: "Detect jailbreak attempts that override safety instructions."
+        categories: ["jailbreak", "safety"]
+        applies_to: ["input"]
+        mode: "block"
+        severity: "high"
+        priority: 5
+        patterns:
+          - "(ignore all prior instructions|jailbreak|unfiltered response)"
+        tags: ["baseline", "jailbreak"]
+        policy_references: ["policy_guardrails"]
+        message_templates:
+          refusal: "I must follow the platform safety rules and cannot bypass them."
+      - name: policy_contradiction
+        description: "Detect prompts asking to bypass company or legal policies."
+        categories: ["policy", "safety"]
+        applies_to: ["input", "output"]
+        mode: "warn"
+        severity: "medium"
+        priority: 15
+        patterns:
+          - "(ignore the compliance policy|skip safety review|bypass restrictions)"
+        tags: ["compliance"]
+        policy_references: ["safety_policy_v1"]
+        message_templates:
+          escalation: "Potential policy bypass detected. Review required."
+      - name: safe_completion_style
+        description: "Encourage concise, citation-friendly completions."
+        categories: ["refusal_style", "citations"]
+        applies_to: ["output"]
+        mode: "warn"
+        severity: "low"
+        priority: 50
+        patterns: []
+        tags: ["style", "citations"]
+        policy_references: ["style_guide"]
+        message_templates:
+          escalation: "Ensure responses stay concise, cite sources, and include safety notes when refusing."
+      - name: hallucination_hint
+        description: "Flag low-confidence speculation requests."
+        categories: ["hallucination"]
+        applies_to: ["input"]
+        mode: "warn"
+        severity: "medium"
+        priority: 30
+        patterns:
+          - "(make something up|invent|improvise facts)"
+        tags: ["hallucination"]
+        policy_references: ["hallucination_policy"]
+        message_templates:
+          escalation: "Speculative requests detected. Ground responses with citations or decline."

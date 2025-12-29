@@ -1,83 +1,106 @@
 """
 Centralized guardrail scaffolding.
 
-Define pre- and post-execution guardrails that can be composed per agent or
-globally. Extend these with custom checks (PII, safety, domain rules) as needed.
+Defines pre-, post-, and tool-call guardrails composed from YAML/Markdown
+definitions. Guardrails are layered (defaults -> workflow -> agent) and merged
+deterministically before being evaluated at runtime.
 """
 
+from __future__ import annotations
+
+import json
 import re
-from typing import Callable, Dict, List, Optional
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional
+
+from {{ cookiecutter.project_slug }}.config.spec_models import AgentGuardrailConfig, GuardrailRule
+from {{ cookiecutter.project_slug }}.guardrails.resolver import GuardrailResolver
 
 
 class GuardrailViolation(Exception):
     """Raised when a guardrail is violated."""
 
 
+def _compile_patterns(patterns: Iterable[str]) -> List[re.Pattern[str]]:
+    compiled: List[re.Pattern[str]] = []
+    for pat in patterns:
+        try:
+            compiled.append(re.compile(pat, flags=re.IGNORECASE))
+        except re.error as exc:  # pragma: no cover - validated by loader
+            raise ValueError(f"Invalid regex in guardrail pattern '{pat}': {exc}") from exc
+    return compiled
+
+
+def _severity_rank(severity: str) -> int:
+    order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    return order.get(severity, 3)
+
+
 class GuardrailManager:
-    def __init__(
-        self,
-        pre: Optional[List[Callable[[str], None]]] = None,
-        post: Optional[List[Callable[[str], None]]] = None,
-        scrubbers: Optional[List[Callable[[str], str]]] = None,
-    ):
-        self.pre = pre or []
-        self.post = post or []
-        self.scrubbers = scrubbers or []
+    """
+    Execute guardrail rules deterministically across input, output, and tool-call stages.
+    """
 
-    def run_pre(self, user_input: str):
-        for check in self.pre:
-            check(user_input)
+    def __init__(self, rules: Optional[List[GuardrailRule]] = None):
+        self.rules = sorted(rules or [], key=lambda r: (r.priority, _severity_rank(r.severity), r.name))
+        self._compiled = {rule.name: _compile_patterns(rule.patterns) for rule in self.rules}
+        self.warnings: List[str] = []
 
-    def run_post(self, output: str) -> str:
-        sanitized = output
-        for scrubber in self.scrubbers:
-            sanitized = scrubber(sanitized)
-        for check in self.post:
-            check(sanitized)
+    def _apply(self, text: str, stage: str, tool_name: Optional[str] = None, params: Optional[Dict] = None) -> str:
+        sanitized = text
+        for rule in self.rules:
+            if stage not in rule.applies_to:
+                continue
+
+            haystack = (
+                sanitized
+                if stage != "tool"
+                else json.dumps({"tool": tool_name, "params": params or {}}, sort_keys=True)
+            )
+            matchers = self._compiled.get(rule.name, [])
+            triggered = any(matcher.search(haystack) for matcher in matchers) if matchers else True
+            if not triggered:
+                continue
+
+            if rule.mode == "redact" and stage != "tool":
+                for matcher in matchers:
+                    sanitized = matcher.sub("[REDACTED]", sanitized)
+                continue
+
+            if rule.mode == "block":
+                message = rule.message_templates.refusal or f"Guardrail '{rule.name}' blocked {stage}."
+                raise GuardrailViolation(message)
+            if rule.mode == "warn":
+                note = rule.message_templates.escalation or f"Guardrail '{rule.name}' warning on {stage}."
+                self.warnings.append(note)
+            # allow/no-op handled implicitly
         return sanitized
 
+    def check_input(self, user_input: str) -> str:
+        return self._apply(user_input, stage="input")
 
-# Example, configurable policies
-def block_empty_input(text: str):
-    if not text or not text.strip():
-        raise GuardrailViolation("Empty input is not allowed.")
+    def check_output(self, output: str) -> str:
+        return self._apply(output, stage="output")
 
-
-def block_banned_terms(banned: List[str]):
-    def _checker(text: str):
-        lowered = text.lower()
-        if any(term.lower() in lowered for term in banned):
-            raise GuardrailViolation("Input contains banned terms.")
-    return _checker
+    def check_tool(self, tool_name: str, params: Optional[Dict] = None) -> None:
+        self._apply("", stage="tool", tool_name=tool_name, params=params)
 
 
-def limit_output_length(max_len: int = 2000):
-    def _checker(text: str):
-        if text and len(text) > max_len:
-            raise GuardrailViolation(f"Output exceeds {max_len} characters.")
-    return _checker
-
-
-def scrub_emails(text: str) -> str:
+def build_default_guardrails(config: Optional[Dict] = None) -> GuardrailManager:
     """
-    Redact email-like strings to protect PII in outputs.
+    Build guardrails using the YAML/Markdown-driven system for legacy entrypoints.
     """
-    email_regex = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
-    return email_regex.sub("[REDACTED_EMAIL]", text)
 
+    cfg = config or {}
+    base_dir = Path(cfg.get("base_dir", Path.cwd()))
+    defaults_path = cfg.get("guardrails_path", "guardrails/default_guardrails.yaml")
+    workflow_guardrails = cfg.get("workflow_guardrails")
+    agent_guardrails = cfg.get("agent_guardrails")
 
-def build_default_guardrails(config: Dict) -> GuardrailManager:
-    """
-    Build default guardrails using config-driven policies.
-    """
-    banned_terms = config.get("guardrail_banned_terms", "").split(",") if config.get("guardrail_banned_terms") else []
-    max_len = int(config.get("guardrail_max_output_len", 2000))
-
-    pre_checks = [block_empty_input]
-    if banned_terms:
-        pre_checks.append(block_banned_terms([term.strip() for term in banned_terms if term.strip()]))
-    post_checks = [limit_output_length(max_len)]
-
-    scrubbers = [scrub_emails]
-
-    return GuardrailManager(pre=pre_checks, post=post_checks, scrubbers=scrubbers)
+    resolver = GuardrailResolver(base_dir)
+    defaults_cfg, default_set_names = resolver.load_defaults(defaults_path)
+    merged, default_set_names = resolver.merge_configs(defaults_cfg, workflow_guardrails or defaults_cfg)
+    agent_cfg = agent_guardrails or AgentGuardrailConfig(use_sets=merged.apply_sets)
+    resolver.validate_docs(merged, [agent_cfg])
+    rules = resolver.resolve_agent_rules(merged, default_set_names, agent_cfg)
+    return GuardrailManager(rules=rules)
