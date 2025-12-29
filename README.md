@@ -482,7 +482,14 @@ sets:
 
 > **Tip**: Keep prompts and guardrails in the same folders referenced by your workflow YAML so validation succeeds, and use `${ENV_VAR}` placeholders for any secrets in YAML.
 
----
+**Glossary**
+- **Cookiecutter**: tool that asks prompts and generates a project folder from this template.
+- **Poetry**: dependency and packaging manager used by the generated project.
+- **pre-commit**: git hook manager (not preconfigured—add if you need automated formatting/checks).
+- **MCP (Model Context Protocol)**: standard for exposing tools/resources to LLMs; configured via `config/mcp_connectors.yaml`.
+- **RAG (Retrieval-Augmented Generation)**: pattern combining retrieval (embeddings/vector store) with generation.
+- **Guardrails**: safety/policy rules enforced on inputs/outputs/tool calls, defined in YAML/Markdown.
+- **A2A protocol**: agent-to-agent messaging scaffold in `protocols/a2a_protocol.py`.
 
 ## 11. Appendix
 
