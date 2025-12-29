@@ -9,7 +9,12 @@ class ChatMemory:
     Backed by a JSON file so conversations persist across runs.
     """
 
-    def __init__(self, storage_path: Optional[str] = None):
+    def __init__(
+        self,
+        storage_path: Optional[str] = None,
+        ttl_messages: Optional[int] = None,
+        summarization_policy: str = "truncate",
+    ):
         """
         Initializes the memory store and loads any existing history from disk.
 
@@ -19,6 +24,8 @@ class ChatMemory:
         """
         self.storage_path = Path(storage_path or ".sparkgen_memory.json")
         self.history: List[Dict[str, str]] = []
+        self.ttl_messages = ttl_messages
+        self.summarization_policy = summarization_policy
         self._load()
 
     def _load(self) -> None:
@@ -50,6 +57,7 @@ class ChatMemory:
             ai_msg (str): The response from the AI.
         """
         self.history.append({"human": human_msg, "ai": ai_msg})
+        self._apply_ttl()
         self._persist()
 
     def get_history(self) -> str:
@@ -75,3 +83,28 @@ class ChatMemory:
                 self.storage_path.unlink()
             except OSError:
                 pass
+
+    def _apply_ttl(self) -> None:
+        """
+        Apply TTL or summarization policy when history grows beyond the allowed length.
+        """
+        if not self.ttl_messages:
+            return
+        if len(self.history) <= self.ttl_messages:
+            return
+
+        if self.summarization_policy == "summarize":
+            self.history = [{"human": "[summary]", "ai": self._summarize_history()}]
+        else:
+            self.history = self.history[-self.ttl_messages :]
+
+    def _summarize_history(self) -> str:
+        """
+        Lightweight summarization that compresses messages while avoiding extra dependencies.
+        """
+        summaries = []
+        for entry in self.history:
+            human = entry.get("human", "")[:200]
+            ai = entry.get("ai", "")[:200]
+            summaries.append(f"Human said: {human} | AI replied: {ai}")
+        return " | ".join(summaries)

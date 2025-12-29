@@ -1,18 +1,13 @@
-"""Entry point for generated projects.
+"""
+Entry point for generated projects.
 
-This file now supports multiple modes:
-
-- Router-manager multi-agent: a simple router dispatches queries to multiple
-  specialist agents.
-- Planner-builder multi-agent: a future extension point for a planner that can
-  construct and execute task graphs (scaffold left for user customization).
-- Single-agent: legacy flow for minimal setups.
-
-The goal is to mirror modern multi-agent templates such as
-`neural-maze/agent-api-cookiecutter` while keeping the project beginner-friendly.
+This module now supports a Spec-as-Code workflow (`sparksgen run workflow.yaml`),
+an init helper (`sparksgen init --template rag_agentic`), JSON Schema export,
+and the legacy pattern-based runner for backwards compatibility.
 """
 
 import argparse
+import json
 from pathlib import Path
 from typing import List
 
@@ -27,6 +22,9 @@ from {{ cookiecutter.project_slug }}.config.config_loader import ConfigLoader
 from {{ cookiecutter.project_slug }}.protocols.a2a_protocol import AgentToAgentProtocol
 from {{ cookiecutter.project_slug }}.guardrails.policies import build_default_guardrails
 from {{ cookiecutter.project_slug }}.evaluation.evaluator import RAGEvaluator
+from {{ cookiecutter.project_slug }}.orchestration.spec_runtime import load_workflow
+from {{ cookiecutter.project_slug }}.config.spec_loader import WorkflowSpecLoader, SpecValidationError
+from {{ cookiecutter.project_slug }}.config.spec_templates import init_template, TemplateError
 
 
 def build_base_components(config, telemetry):
@@ -114,28 +112,70 @@ class SimplePlanner:
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run SparkGen agent flows.")
-    parser.add_argument(
+    subparsers = parser.add_subparsers(dest="command")
+
+    run_parser = subparsers.add_parser("run", help="Run a Spec-as-Code workflow.")
+    run_parser.add_argument("workflow", help="Path to workflow.yaml")
+    run_parser.add_argument("--env", dest="environment", help="Environment override (dev/staging/prod).")
+    run_parser.add_argument("--query", help="User query for the workflow.")
+
+    init_parser = subparsers.add_parser("init", help="Bootstrap a workflow from a template.")
+    init_parser.add_argument("--template", default="rag_agentic", help="Template name to copy.")
+    init_parser.add_argument("--output", default=".", help="Destination directory.")
+
+    schema_parser = subparsers.add_parser("schema", help="Export JSON Schema for workflow.yaml")
+    schema_parser.add_argument(
+        "--output",
+        default=str(Path.cwd() / "workflow.schema.json"),
+        help="Path to write the JSON Schema.",
+    )
+
+    legacy_parser = subparsers.add_parser("legacy", help="Legacy runtime preserved for backward compatibility.")
+    legacy_parser.add_argument(
         "--pattern",
         choices=["single-agent", "router-manager", "planner-builder", "evaluation"],
         help="Override the multi-agent pattern.",
     )
-    parser.add_argument(
-        "--query",
-        help="User query to send to the selected pattern.",
-    )
-    parser.add_argument(
+    legacy_parser.add_argument("--query", help="User query to send to the selected pattern.")
+    legacy_parser.add_argument(
         "--dataset",
         default=str(Path(__file__).parent / "evaluation" / "rag_dataset.json"),
         help="Path to evaluation dataset for --pattern evaluation.",
     )
+
+    parser.set_defaults(command="legacy")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+
+    if args.command == "run":
+        try:
+            runtime = load_workflow(args.workflow, environment=args.environment)
+            result = runtime.run(args.query or "Hello! Can you summarize the project scope?")
+            print(json.dumps(result, indent=2))
+        except SpecValidationError as exc:
+            raise SystemExit(f"[spec-validation] {exc}") from exc
+        return
+
+    if args.command == "init":
+        try:
+            dest = init_template(args.template, args.output)
+            print(f"Template '{args.template}' copied into {dest}")
+        except TemplateError as exc:
+            raise SystemExit(str(exc)) from exc
+        return
+
+    if args.command == "schema":
+        target = Path(args.output)
+        WorkflowSpecLoader.write_schema(target)
+        print(f"JSON Schema written to {target}")
+        return
+
     config = ConfigLoader().load_config()
-    mode = args.pattern or config.get("multi_agent_mode", "single-agent")
-    user_query = args.query or "Hello! Can you summarize the project scope?"
+    mode = getattr(args, "pattern", None) or config.get("multi_agent_mode", "single-agent")
+    user_query = getattr(args, "query", None) or "Hello! Can you summarize the project scope?"
 
     telemetry = Telemetry(
         telemetry_endpoint=config.get("telemetry_endpoint"),
