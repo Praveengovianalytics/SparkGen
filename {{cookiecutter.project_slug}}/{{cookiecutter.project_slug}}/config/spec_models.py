@@ -50,7 +50,7 @@ class KnowledgeBase(BaseModel):
 
 class RAGConfig(BaseModel):
     enabled: bool = True
-    retriever: Literal["in_memory", "stub"] = "in_memory"
+    retriever: Literal["in_memory", "stub", "azure_ai_search", "faiss"] = "in_memory"
     top_k: int = 3
     embedding_model: str = "local-hash-128"
     chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
@@ -74,11 +74,51 @@ class MemoryConfig(BaseModel):
     )
 
 
+class AzureAISearchAuthConfig(BaseModel):
+    api_key_env: Optional[str] = None
+    use_msi: bool = False
+    msi_client_id_env: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_auth(self):
+        if self.use_msi:
+            if self.api_key_env:
+                raise ValueError("Use either MSI or api_key_env, not both.")
+            if self.msi_client_id_env:
+                _ensure_env_ref(self.msi_client_id_env)
+        else:
+            if not self.api_key_env:
+                raise ValueError("api_key_env is required when MSI is disabled.")
+            _ensure_env_ref(self.api_key_env)
+        return self
+
+
+class AzureAISearchConfig(BaseModel):
+    endpoint: str
+    index_name: str
+    api_version: str = "2024-07-01-preview"
+    auth: AzureAISearchAuthConfig = Field(default_factory=AzureAISearchAuthConfig)
+
+
+class FaissConfig(BaseModel):
+    index_path: str
+    metadata_store_path: Optional[str] = None
+
+    @field_validator("index_path")
+    @classmethod
+    def validate_index_path(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("faiss.index_path cannot be empty.")
+        return value
+
+
 class VectorStoreConfig(BaseModel):
-    backend: Literal["local_memory", "chroma_stub"] = "local_memory"
+    backend: Literal["local_memory", "chroma_stub", "azure_ai_search", "faiss"] = "local_memory"
     collection: str = "sparkgen_vectors"
     path: Optional[str] = None
     credentials: Dict[str, str] = Field(default_factory=dict)
+    azure_ai_search: Optional[AzureAISearchConfig] = None
+    faiss: Optional[FaissConfig] = None
 
     @field_validator("credentials")
     @classmethod
@@ -86,6 +126,19 @@ class VectorStoreConfig(BaseModel):
         for _, val in value.items():
             _ensure_env_ref(val)
         return value
+
+    @model_validator(mode="after")
+    def validate_backend_config(self):
+        if self.backend == "azure_ai_search":
+            if not self.azure_ai_search:
+                raise ValueError("azure_ai_search configuration is required when backend is azure_ai_search.")
+        if self.backend == "faiss":
+            if not self.faiss:
+                if self.path:
+                    self.faiss = FaissConfig(index_path=self.path)
+                else:
+                    raise ValueError("faiss.index_path is required when backend is faiss.")
+        return self
 
 
 class DocumentStoreConfig(BaseModel):

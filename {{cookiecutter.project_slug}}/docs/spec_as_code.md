@@ -26,7 +26,7 @@
 - `entry_agent`: name of the first agent to run.
 - `environment`: selected environment key (`dev/staging/prod`).
 - `rag`: `enabled`, `retriever (in_memory|stub)`, `top_k`, `embedding_model`, `chunking.size|overlap|strategy`, `reranker.enabled|provider|top_n`, `citations`, `collection`, `knowledge_bases[] (name|description|collection|contexts[])`, `default_knowledge_bases[]` to limit retrieval to specific KBs.
-- `storage`: `vector_store.backend|collection|credentials`, `document_store.backend|path|credentials`, `memory_store_path`.
+- `storage`: `vector_store.backend|collection|credentials`, optional backend-specific blocks: `vector_store.azure_ai_search.endpoint|index_name|api_version|auth.use_msi|auth.api_key_env|auth.msi_client_id_env`, `vector_store.faiss.index_path|metadata_store_path`, `document_store.backend|path|credentials`, `memory_store_path`.
 - `memory`: `short_term.store|ttl_messages|null|summarization_policy`, `long_term.store|ttl_messages|null|summarization_policy`.
 - `tools`: `builtin` tool names, `mcp_connectors[]` (`name`, `host`, `port`, `protocol`, `active`, `credentials ${ENV}`, `tools[]` with `name`, `resource`, `description`, `active`, `rate_limit_per_minute`), `exposed_mcp_tools` to allowlist MCP tools by name.
 - `guardrails`: `defaults_path`, `documentation`, `workflow_doc`, `apply_sets[]`, `allowed_categories[]`, `sets[]` (each with `name`, optional `description|docs`, and `rules[]` of `name`, `description`, `categories[]`, `applies_to[] (input|output|tool)`, `mode (block|warn|redact|allow)`, `severity`, `priority`, `patterns[]`, `tags[]`, `policy_references[]`, `message_templates.refusal|escalation`, `tests[prompt, expected_outcome]`).

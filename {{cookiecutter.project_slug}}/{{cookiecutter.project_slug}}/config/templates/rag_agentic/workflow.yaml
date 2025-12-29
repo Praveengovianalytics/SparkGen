@@ -36,8 +36,18 @@ rag:
 
 storage:
   vector_store:
-    backend: local_memory
+    backend: azure_ai_search
     collection: product_vectors
+    azure_ai_search:
+      endpoint: ${AZURE_SEARCH_ENDPOINT}
+      index_name: sparkgen-product-index
+      api_version: 2024-07-01-preview
+      auth:
+        use_msi: true
+        msi_client_id_env: ${AZURE_SEARCH_CLIENT_ID}
+    faiss:
+      index_path: data/faiss/index.faiss
+      metadata_store_path: data/faiss/metadata.json
     credentials:
       auth_token: ${VECTOR_DB_TOKEN}
   document_store:
