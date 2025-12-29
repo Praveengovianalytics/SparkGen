@@ -1,0 +1,32 @@
+channels:
+  - name: slack_support
+    type: slack
+    active: true
+    description: "Default Slack webhook for agent responses."
+    settings:
+      webhook_url: ${SLACK_WEBHOOK_URL}
+
+  - name: teams_updates
+    type: teams
+    active: false
+    description: "Teams incoming webhook for status updates."
+    settings:
+      webhook_url: ${TEAMS_WEBHOOK_URL}
+
+  - name: telegram_ops
+    type: telegram
+    active: false
+    description: "Telegram bot channel for ops alerts."
+    settings:
+      bot_token: ${TELEGRAM_BOT_TOKEN}
+      chat_id: ${TELEGRAM_CHAT_ID}
+
+  - name: whatsapp_care
+    type: whatsapp
+    active: false
+    description: "WhatsApp Cloud API channel for customer care."
+    settings:
+      api_url: https://graph.facebook.com/v18.0
+      token: ${WHATSAPP_TOKEN}
+      phone_number_id: ${WHATSAPP_PHONE_NUMBER_ID}
+      to_number: ${WHATSAPP_RECIPIENT_NUMBER}

@@ -4,6 +4,8 @@ from typing import Dict, Any
 
 from dotenv import load_dotenv
 
+from {{ cookiecutter.project_slug }}.channel.config import load_channel_configs
+from {{ cookiecutter.project_slug }}.channel.connectors import build_channel_clients
 from {{ cookiecutter.project_slug }}.connectors.mcp_client import build_mcp_tooling, load_mcp_connectors
 
 
@@ -27,6 +29,10 @@ class ConfigLoader:
         default_mcp_config = Path(__file__).with_name("mcp_connectors.yaml")
         mcp_config_path = os.getenv("MCP_CONFIG_PATH", str(default_mcp_config))
         mcp_connectors = load_mcp_connectors(mcp_config_path)
+        default_channel_config = Path(__file__).with_name("channels.example.yaml")
+        channel_config_path = os.getenv("CHANNEL_CONFIG_PATH", str(default_channel_config))
+        channel_configs = load_channel_configs(channel_config_path)
+        channel_clients = build_channel_clients(channel_configs)
         return {
             "api_key": os.getenv("LLM_API_KEY", "your-api-key"),
             "model_name": os.getenv("LLM_MODEL_NAME", "gpt-4o-mini"),
@@ -49,4 +55,7 @@ class ConfigLoader:
             "mcp_config_path": mcp_config_path,
             "mcp_connectors": mcp_connectors,
             "mcp_tools": build_mcp_tooling(mcp_connectors),
+            "channel_config_path": channel_config_path,
+            "channels": channel_configs,
+            "channel_clients": channel_clients,
         }
