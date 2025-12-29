@@ -1,0 +1,135 @@
+version: v1
+name: sparkgen-rag-agentic
+description: Reference workflow for Spec-as-Code RAG + Agentic pipelines.
+entry_agent: researcher
+environment: dev
+
+rag:
+  enabled: true
+  retriever: in_memory
+  top_k: 5
+  embedding_model: local-hash-128
+  chunking:
+    size: 800
+    overlap: 100
+    strategy: sliding_window
+  reranker:
+    enabled: true
+    provider: local
+    top_n: 2
+  citations: true
+  collection: product_docs
+
+storage:
+  vector_store:
+    backend: local_memory
+    collection: product_vectors
+    credentials:
+      auth_token: ${VECTOR_DB_TOKEN}
+  document_store:
+    backend: filesystem
+    path: data/docs
+    credentials: {}
+  memory_store_path: .sparkgen_memory.json
+
+memory:
+  short_term:
+    store: memory_store
+    ttl_messages: 25
+    summarization_policy: summarize
+  long_term:
+    store: vector_store
+    ttl_messages: null
+    summarization_policy: summarize
+
+tools:
+  builtin:
+    - get_delivery_date
+  mcp_connectors:
+    - name: demo-gateway
+      host: localhost
+      port: 9999
+      protocol: ws
+      active: true
+      credentials:
+        token: ${MCP_DEMO_TOKEN}
+      tools:
+        - name: demo.calculator
+          resource: demo.calculator
+          description: Quick math helper for retrieval scoring.
+    - name: docs-gateway
+      host: localhost
+      port: 7000
+      protocol: ws
+      active: false
+      credentials:
+        token: ${DOCS_GATEWAY_TOKEN}
+      tools:
+        - name: docs.search
+          resource: docs.search
+          description: Search structured documentation snippets.
+  exposed_mcp_tools:
+    - mcp__demo_gateway__demo_calculator
+
+agents:
+  - name: researcher
+    role: "Research analyst focused on evidence-gathering."
+    prompt_file: prompts/researcher.md
+    context_file: contexts/product_context.md
+    tools:
+      - mcp__demo_gateway__demo_calculator
+    memory:
+      short_term: true
+      long_term: true
+    guardrails:
+      banned_terms: ["secret", "password"]
+      max_output_len: 1800
+    handoff_notes: "Summarize findings and cite sources before handing off."
+  - name: coder
+    role: "Engineer turning research into actions and patches."
+    prompt_file: prompts/coder.md
+    context_file: contexts/product_context.md
+    tools:
+      - get_delivery_date
+    memory:
+      short_term: true
+      long_term: false
+    guardrails:
+      banned_terms: []
+      max_output_len: 1600
+
+handoffs:
+  - source: researcher
+    target: coder
+    trigger: always
+    message_contract: "Summaries with citations and TODO list."
+
+observability:
+  logging: verbose
+  tracing: true
+  metrics: true
+  run_id_env: RUN_ID
+  telemetry_endpoint: https://telemetry.example.com/events
+  mlflow_tracking_uri: http://localhost:5000
+  langfuse_host: https://cloud.langfuse.com
+  langfuse_public_key_env: LANGFUSE_PUBLIC_KEY
+  langfuse_secret_key_env: LANGFUSE_SECRET_KEY
+
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  api_key_env: LLM_API_KEY
+  use_agents_sdk: false
+  agent_id_env: OPENAI_AGENT_ID
+
+environments:
+  staging:
+    rag:
+      top_k: 3
+    observability:
+      telemetry_endpoint: https://telemetry.staging.example.com/events
+  prod:
+    llm:
+      model: gpt-4o
+    rag:
+      top_k: 8

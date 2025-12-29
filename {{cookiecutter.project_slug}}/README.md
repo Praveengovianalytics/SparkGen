@@ -44,9 +44,21 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
    ```bash
    poetry install
    ```
-3. Run CLI entrypoint (single-agent by default):
+3. Run the Spec-as-Code workflow (preferred):
    ```bash
-   poetry run python {{cookiecutter.project_slug}}/main.py
+   poetry run python {{cookiecutter.project_slug}}/main.py run config/workflow.example.yaml --query "Summarize the workflow"
+   ```
+4. Export the JSON Schema for IDE validation:
+   ```bash
+   poetry run python {{cookiecutter.project_slug}}/main.py schema --output workflow.schema.json
+   ```
+5. Scaffold a new workflow from the starter template:
+   ```bash
+   poetry run python {{cookiecutter.project_slug}}/main.py init --template rag_agentic --output ./my-workflow
+   ```
+6. Legacy CLI entrypoint (single-agent by default):
+   ```bash
+   poetry run python {{cookiecutter.project_slug}}/main.py legacy
    ```
 4. Run FastAPI service (if selected):
    ```bash

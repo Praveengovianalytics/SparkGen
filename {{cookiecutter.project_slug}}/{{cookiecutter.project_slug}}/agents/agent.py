@@ -101,6 +101,5 @@ class RouterManager:
         """Route a query to an agent and execute it."""
         if not self.agents:
             raise ValueError("No agents configured for routing.")
-        # Placeholder: naive selection of the first agent. Replace with semantic routing.
-        agent = self.agents[0]
+        agent = self.default_agent or self.agents[0]
         return agent.execute(user_query)
