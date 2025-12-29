@@ -60,6 +60,41 @@ tools:
   exposed_mcp_tools:
     - mcp__demo__demo_calculator
 
+guardrails:
+  defaults_path: ../guardrails/default_guardrails.yaml
+  documentation: ../guardrails/README.md
+  workflow_doc: ../guardrails/workflow.md
+  apply_sets:
+    - platform_defaults
+    - workflow_rag
+  sets:
+    - name: workflow_rag
+      description: "Workflow-specific rails for RAG plus multi-agent routing."
+      docs: ../guardrails/workflow.md
+      rules:
+        - name: researcher_citations_required
+          description: "Encourage citations whenever research answers are produced."
+          categories: ["citations", "policy"]
+          applies_to: ["output"]
+          mode: warn
+          severity: medium
+          priority: 20
+          patterns:
+            - "(?i)(citation needed|no references)"
+          tags: ["rag", "citations"]
+          message_templates:
+            escalation: "Remind the agent to include citations for each claim."
+        - name: tool_data_privacy
+          description: "Warn if tool calls attempt to ship raw user data."
+          categories: ["tool_use_constraints", "privacy"]
+          applies_to: ["tool"]
+          mode: warn
+          severity: high
+          priority: 25
+          patterns:
+            - "mcp__demo__demo_calculator"
+          tags: ["tooling"]
+
 agents:
   - name: researcher
     role: "Research-first agent that gathers facts with citations."
@@ -71,8 +106,21 @@ agents:
       short_term: true
       long_term: true
     guardrails:
-      banned_terms: ["secret", "password"]
-      max_output_len: 1600
+      use_sets:
+        - workflow_rag
+      overrides:
+        - name: researcher_sensitive_terms
+          description: "Block sharing secrets or passwords outright."
+          categories: ["policy", "privacy"]
+          applies_to: ["output"]
+          mode: block
+          severity: high
+          priority: 8
+          patterns:
+            - "(secret|password)"
+          message_templates:
+            refusal: "I cannot disclose secrets or passwords."
+      doc: ../guardrails/agents/researcher.md
     handoff_notes: "Return 3-5 bullet summary with citations."
   - name: coder
     role: "Action/implementation agent that produces steps and patches."
@@ -84,8 +132,20 @@ agents:
       short_term: true
       long_term: false
     guardrails:
-      banned_terms: []
-      max_output_len: 1400
+      use_sets:
+        - platform_defaults
+      overrides:
+        - name: coder_patch_constraints
+          description: "Keep code patch suggestions under 1400 characters."
+          categories: ["constraints", "safety"]
+          applies_to: ["output"]
+          mode: warn
+          severity: low
+          priority: 40
+          patterns: []
+          message_templates:
+            escalation: "Summaries should stay concise (<1400 chars) and actionable."
+      doc: ../guardrails/agents/coder.md
 
 handoffs:
   - source: researcher

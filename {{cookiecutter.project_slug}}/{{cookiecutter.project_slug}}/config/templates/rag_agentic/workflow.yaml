@@ -71,6 +71,40 @@ tools:
   exposed_mcp_tools:
     - mcp__demo_gateway__demo_calculator
 
+guardrails:
+  defaults_path: guardrails/default_guardrails.yaml
+  documentation: guardrails/README.md
+  workflow_doc: guardrails/workflow.md
+  apply_sets:
+    - platform_defaults
+    - workflow_rag
+  sets:
+    - name: workflow_rag
+      description: "Workflow-specific rails for RAG + agentic orchestration."
+      docs: guardrails/workflow.md
+      rules:
+        - name: citations_encouraged
+          description: "Warn if research answers omit citations."
+          categories: ["citations"]
+          applies_to: ["output"]
+          mode: warn
+          severity: medium
+          priority: 20
+          patterns:
+            - "(?i)(citation needed|no reference)"
+          message_templates:
+            escalation: "Add citations for each claim or refuse if sources are unavailable."
+        - name: tooling_privacy_warn
+          description: "Warn if tool calls could leak raw user inputs."
+          categories: ["tool_use_constraints", "privacy"]
+          applies_to: ["tool"]
+          mode: warn
+          severity: high
+          priority: 25
+          patterns:
+            - "mcp__demo_gateway__demo_calculator"
+          tags: ["tooling"]
+
 agents:
   - name: researcher
     role: "Research analyst focused on evidence-gathering."
@@ -82,8 +116,21 @@ agents:
       short_term: true
       long_term: true
     guardrails:
-      banned_terms: ["secret", "password"]
-      max_output_len: 1800
+      use_sets:
+        - workflow_rag
+      overrides:
+        - name: researcher_no_secrets
+          description: "Block sharing secrets or passwords."
+          categories: ["policy", "privacy"]
+          applies_to: ["output"]
+          mode: block
+          severity: high
+          priority: 8
+          patterns:
+            - "(secret|password)"
+          message_templates:
+            refusal: "I cannot disclose secrets or passwords."
+      doc: guardrails/agents/researcher.md
     handoff_notes: "Summarize findings and cite sources before handing off."
   - name: coder
     role: "Engineer turning research into actions and patches."
@@ -95,8 +142,20 @@ agents:
       short_term: true
       long_term: false
     guardrails:
-      banned_terms: []
-      max_output_len: 1600
+      use_sets:
+        - platform_defaults
+      overrides:
+        - name: coder_patch_concise
+          description: "Keep patch suggestions concise."
+          categories: ["constraints", "safety"]
+          applies_to: ["output"]
+          mode: warn
+          severity: low
+          priority: 40
+          patterns: []
+          message_templates:
+            escalation: "Keep responses concise (<1400 chars) and actionable."
+      doc: guardrails/agents/coder.md
 
 handoffs:
   - source: researcher

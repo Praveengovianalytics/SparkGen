@@ -123,9 +123,68 @@ class ToolRegistry(BaseModel):
     exposed_mcp_tools: List[str] = Field(default_factory=list)
 
 
-class GuardrailSpec(BaseModel):
-    banned_terms: List[str] = Field(default_factory=list)
-    max_output_len: int = 2000
+class GuardrailMessageTemplates(BaseModel):
+    refusal: Optional[str] = None
+    escalation: Optional[str] = None
+
+
+class GuardrailTestCase(BaseModel):
+    prompt: str
+    expected_outcome: Literal["block", "warn", "redact", "allow"]
+
+
+class GuardrailRule(BaseModel):
+    name: str
+    description: Optional[str] = None
+    categories: List[str] = Field(default_factory=list)
+    applies_to: List[Literal["input", "output", "tool"]] = Field(
+        default_factory=lambda: ["input", "output"], description="Where this rule applies."
+    )
+    mode: Literal["block", "warn", "redact", "allow"] = "warn"
+    severity: Literal["critical", "high", "medium", "low"] = "medium"
+    priority: int = 100
+    patterns: List[str] = Field(default_factory=list, description="Optional regex patterns for detection.")
+    tags: List[str] = Field(default_factory=list)
+    policy_references: List[str] = Field(default_factory=list)
+    message_templates: GuardrailMessageTemplates = Field(default_factory=GuardrailMessageTemplates)
+    tests: List[GuardrailTestCase] = Field(default_factory=list)
+
+    @field_validator("categories")
+    @classmethod
+    def validate_categories(cls, value: List[str]) -> List[str]:
+        cleaned = [item.strip() for item in value if item.strip()]
+        if not cleaned:
+            raise ValueError("Guardrail rule must declare at least one category.")
+        return cleaned
+
+    @field_validator("applies_to")
+    @classmethod
+    def validate_applies_to(cls, value: List[str]) -> List[str]:
+        if not value:
+            raise ValueError("Guardrail rule must specify at least one application stage.")
+        return value
+
+
+class GuardrailSet(BaseModel):
+    name: str
+    description: Optional[str] = None
+    docs: Optional[str] = None
+    rules: List[GuardrailRule] = Field(default_factory=list)
+
+
+class GuardrailConfig(BaseModel):
+    defaults_path: str = "guardrails/default_guardrails.yaml"
+    documentation: Optional[str] = None
+    workflow_doc: Optional[str] = None
+    apply_sets: List[str] = Field(default_factory=list)
+    allowed_categories: List[str] = Field(default_factory=list)
+    sets: List[GuardrailSet] = Field(default_factory=list)
+
+
+class AgentGuardrailConfig(BaseModel):
+    use_sets: List[str] = Field(default_factory=list)
+    overrides: List[GuardrailRule] = Field(default_factory=list)
+    doc: Optional[str] = None
 
 
 class AgentMemoryBinding(BaseModel):
@@ -141,7 +200,7 @@ class AgentSpec(BaseModel):
     context_file: Optional[str] = None
     tools: List[str] = Field(default_factory=list)
     memory: AgentMemoryBinding = Field(default_factory=AgentMemoryBinding)
-    guardrails: GuardrailSpec = Field(default_factory=GuardrailSpec)
+    guardrails: AgentGuardrailConfig = Field(default_factory=AgentGuardrailConfig)
     handoff_notes: Optional[str] = None
 
 
@@ -179,6 +238,7 @@ class WorkflowOverrides(BaseModel):
     tools: Optional[ToolRegistry] = None
     observability: Optional[ObservabilityConfig] = None
     llm: Optional[LLMConfig] = None
+    guardrails: Optional[GuardrailConfig] = None
 
 
 class WorkflowSpec(BaseModel):
@@ -191,6 +251,7 @@ class WorkflowSpec(BaseModel):
     storage: StorageConfig = Field(default_factory=StorageConfig)
     memory: MemoryConfig = Field(default_factory=MemoryConfig)
     tools: ToolRegistry = Field(default_factory=ToolRegistry)
+    guardrails: GuardrailConfig = Field(default_factory=GuardrailConfig)
     agents: List[AgentSpec]
     handoffs: List[HandoffRule] = Field(default_factory=list)
     observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)

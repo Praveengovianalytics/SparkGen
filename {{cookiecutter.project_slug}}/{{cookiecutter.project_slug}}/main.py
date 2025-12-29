@@ -23,7 +23,8 @@ from {{ cookiecutter.project_slug }}.protocols.a2a_protocol import AgentToAgentP
 from {{ cookiecutter.project_slug }}.guardrails.policies import build_default_guardrails
 from {{ cookiecutter.project_slug }}.evaluation.evaluator import RAGEvaluator
 from {{ cookiecutter.project_slug }}.orchestration.spec_runtime import load_workflow
-from {{ cookiecutter.project_slug }}.config.spec_loader import WorkflowSpecLoader, SpecValidationError
+from {{ cookiecutter.project_slug }}.config.errors import SpecValidationError
+from {{ cookiecutter.project_slug }}.config.spec_loader import WorkflowSpecLoader
 from {{ cookiecutter.project_slug }}.config.spec_templates import init_template, TemplateError
 
 

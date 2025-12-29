@@ -1,0 +1,1 @@
+# Researcher guardrails\n\n- Use the workflow RAG set plus platform defaults.\n- Block disclosure of secrets/passwords; refuse with safe language.\n- Keep outputs citeable; if unsure, ask for more context rather than speculate.\n*** End Patch

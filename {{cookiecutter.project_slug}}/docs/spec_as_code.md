@@ -9,6 +9,11 @@
 │   ├── spec_loader.py               # YAML loader, env override merge, validation
 │   ├── spec_templates.py            # `sparksgen init --template ...` helper
 │   └── templates/rag_agentic/       # Starter workflow + prompts/contexts
+├── guardrails/
+│   ├── default_guardrails.yaml      # Platform default guardrail sets
+│   ├── README.md                    # Guardrail rationale + how-to guides
+│   ├── workflow.md                  # Example workflow-specific guardrails
+│   └── agents/*.md                  # Optional agent-specific rationales
 ├── orchestration/spec_runtime.py    # Wiring layer to build agents/tools/router
 ├── prompts/*.md                     # Agent prompts (referenced by YAML)
 ├── contexts/*.md                    # Workflow context blocks (referenced by YAML)
@@ -24,7 +29,8 @@
 - `storage`: `vector_store.backend|collection|credentials`, `document_store.backend|path|credentials`, `memory_store_path`.
 - `memory`: `short_term.store|ttl_messages|null|summarization_policy`, `long_term.store|ttl_messages|null|summarization_policy`.
 - `tools`: `builtin` tool names, `mcp_connectors[]` (`name`, `host`, `port`, `protocol`, `active`, `credentials ${ENV}`, `tools[]` with `name`, `resource`, `description`, `active`, `rate_limit_per_minute`), `exposed_mcp_tools` to allowlist MCP tools by name.
-- `agents[]`: `name`, `role`, `prompt_file`, optional `context_file`, `tools[]` (must exist in registry), `memory.short_term|long_term`, `guardrails.banned_terms|max_output_len`, `handoff_notes`.
+- `guardrails`: `defaults_path`, `documentation`, `workflow_doc`, `apply_sets[]`, `allowed_categories[]`, `sets[]` (each with `name`, optional `description|docs`, and `rules[]` of `name`, `description`, `categories[]`, `applies_to[] (input|output|tool)`, `mode (block|warn|redact|allow)`, `severity`, `priority`, `patterns[]`, `tags[]`, `policy_references[]`, `message_templates.refusal|escalation`, `tests[prompt, expected_outcome]`).
+- `agents[]`: `name`, `role`, `prompt_file`, optional `context_file`, `tools[]` (must exist in registry), `memory.short_term|long_term`, `guardrails.use_sets|overrides|doc`, `handoff_notes`.
 - `handoffs[]`: `source`, `target`, `trigger (always|on_success)`, `message_contract`.
 - `observability`: `logging (basic|verbose)`, `tracing`, `metrics`, `run_id_env`, `telemetry_endpoint`, `mlflow_tracking_uri`, `langfuse_host`, `langfuse_public_key_env`, `langfuse_secret_key_env`.
 - `llm`: `provider`, `model`, `api_key_env`, `use_agents_sdk`, `agent_id_env`.
@@ -49,8 +55,12 @@
 6. **Docs (practical playbooks)**
 - Add a new Agent:
   1) Create `prompts/<agent>.md` (and optional `contexts/*.md` block).
-  2) Append an entry to `agents[]` in `workflow.yaml` with `name`, `role`, `prompt_file`, `context_file`, tool list, and guardrails.
+  2) Append an entry to `agents[]` in `workflow.yaml` with `name`, `role`, `prompt_file`, `context_file`, tool list, and guardrails (`use_sets`, `overrides`, `doc`).
   3) Reference the agent in `entry_agent` or `handoffs` as needed; rerun `sparksgen run workflow.yaml`.
+- Add guardrails:
+  1) Update `guardrails/default_guardrails.yaml` with platform sets, categories, message templates, and tests; document rationale in `guardrails/README.md`.
+  2) In `workflow.yaml`, set `guardrails.defaults_path`, `documentation`, `workflow_doc`, and `apply_sets`; add workflow-level sets under `guardrails.sets[]`.
+  3) For each agent, select `guardrails.use_sets`, add `overrides` as needed, and document them under `guardrails/agents/*.md`.
 - Add a new MCP Tool:
   1) Add a connector or tool under `tools.mcp_connectors[]` with `${ENV}` credentials.
   2) Include the generated tool name (e.g., `mcp__demo_gateway__demo_calculator`) in `tools.exposed_mcp_tools` and in an agent’s `tools[]`.

@@ -11,7 +11,8 @@ from typing import Dict, List, Tuple
 from {{ cookiecutter.project_slug }}.agents.agent import Agent, RouterManager
 from {{ cookiecutter.project_slug }}.config.spec_loader import WorkflowSpecLoader
 from {{ cookiecutter.project_slug }}.config.spec_models import WorkflowSpec
-from {{ cookiecutter.project_slug }}.guardrails.policies import GuardrailManager, block_banned_terms, limit_output_length
+from {{ cookiecutter.project_slug }}.guardrails.policies import GuardrailManager
+from {{ cookiecutter.project_slug }}.guardrails.resolver import GuardrailResolver
 from {{ cookiecutter.project_slug }}.llms.base_llm import BaseLLM
 from {{ cookiecutter.project_slug }}.memory.memory import ChatMemory
 from {{ cookiecutter.project_slug }}.retrievers.retriever import Retriever
@@ -58,6 +59,10 @@ class SpecRuntime:
 
     def _build_agents(self) -> Tuple[Dict[str, Agent], RouterManager]:
         tools_registry = self._build_tools()
+        guardrail_resolver = GuardrailResolver(self.base_dir)
+        defaults_cfg, default_set_names = guardrail_resolver.load_defaults(self.spec.guardrails.defaults_path)
+        merged_guardrails, default_set_names = guardrail_resolver.merge_configs(defaults_cfg, self.spec.guardrails)
+        guardrail_resolver.validate_docs(merged_guardrails, [agent.guardrails for agent in self.spec.agents])
         agents: Dict[str, Agent] = {}
         for agent_spec in self.spec.agents:
             memory_window = self.spec.memory.short_term if agent_spec.memory.short_term else self.spec.memory.long_term
@@ -66,10 +71,8 @@ class SpecRuntime:
                 ttl_messages=memory_window.ttl_messages,
                 summarization_policy=memory_window.summarization_policy,
             )
-            guardrails = GuardrailManager(
-                pre=[block_banned_terms(agent_spec.guardrails.banned_terms)] if agent_spec.guardrails.banned_terms else [],
-                post=[limit_output_length(agent_spec.guardrails.max_output_len)],
-            )
+            resolved_rules = guardrail_resolver.resolve_agent_rules(merged_guardrails, default_set_names, agent_spec.guardrails)
+            guardrails = GuardrailManager(rules=resolved_rules)
             prompt_content = (self.base_dir / agent_spec.prompt_file).read_text()
             if agent_spec.context_file:
                 context_content = (self.base_dir / agent_spec.context_file).read_text()

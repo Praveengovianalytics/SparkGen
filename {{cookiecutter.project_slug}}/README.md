@@ -100,7 +100,10 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
 ├── orchestration/
 │   └── patterns.py          # orchestration scaffolds
 ├── guardrails/
-│   └── policies.py          # guardrail manager and policies
+│   ├── default_guardrails.yaml  # platform-wide guardrail sets + tests
+│   ├── policies.py              # runtime evaluator
+│   ├── resolver.py              # loader/merger/validator
+│   └── README.md                # guardrail docs and workflow/agent links
 ├── protocols/
 │   └── a2a_protocol.py      # agent-to-agent messaging
 ├── connectors/

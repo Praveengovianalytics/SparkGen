@@ -1,0 +1,1 @@
+# Coder guardrails\n\n- Use platform defaults for safety/privacy.\n- Keep patch guidance concise and under 1400 characters; link to sources when\n  summarizing requirements.\n- Avoid embedding secrets or user identifiers in code snippets.\n*** End Patch
