@@ -359,6 +359,138 @@ LANGFUSE_SECRET_KEY=...
 
 ---
 
+## 11. Examples (copy/paste starters)
+
+### Workflow YAML (Spec-as-Code starter)
+```yaml
+# config/workflow.example.yaml
+version: v1
+name: sparkgen-example
+entry_agent: researcher
+environment: dev
+
+rag:
+  enabled: true
+  top_k: 4
+
+tools:
+  builtin:
+    - get_delivery_date
+  mcp_connectors:
+    - name: demo
+      host: localhost
+      port: 9999
+      protocol: ws
+      active: true
+      credentials:
+        token: ${MCP_DEMO_TOKEN}
+      tools:
+        - name: demo.calculator
+          resource: demo.calculator
+  exposed_mcp_tools:
+    - mcp__demo__demo_calculator
+
+agents:
+  - name: researcher
+    role: "Research-first agent that gathers facts with citations."
+    prompt_file: ../prompts/researcher.md
+    context_file: ../contexts/default.md
+    tools:
+      - mcp__demo__demo_calculator
+    memory:
+      short_term: true
+      long_term: true
+    guardrails:
+      use_sets:
+        - workflow_rag
+      overrides:
+        - name: researcher_sensitive_terms
+          description: "Block sharing secrets or passwords."
+          categories: ["policy", "privacy"]
+          applies_to: ["output"]
+          mode: block
+          severity: high
+          priority: 8
+          patterns:
+            - "(secret|password)"
+          message_templates:
+            refusal: "I cannot disclose secrets or passwords."
+    handoff_notes: "Return 3-5 bullet summary with citations."
+  - name: coder
+    role: "Implementation agent that produces steps and patches."
+    prompt_file: ../prompts/coder.md
+    context_file: ../contexts/default.md
+    tools:
+      - get_delivery_date
+    guardrails:
+      use_sets:
+        - platform_defaults
+      overrides: []
+
+handoffs:
+  - source: researcher
+    target: coder
+    trigger: always
+    message_contract: "Summary + citations + recommended next actions."
+```
+
+### Prompt markdown (agent persona)
+```markdown
+<!-- prompts/researcher.md -->
+You are **Researcher**, a fact-first agent.
+- Cite sources when possible.
+- Prefer concise bullet lists (3-5 bullets).
+- If unsure, state the uncertainty and propose how to verify.
+```
+
+```markdown
+<!-- prompts/coder.md -->
+You are **Coder**, focused on actionable implementation steps.
+- Return short, numbered steps.
+- Include code snippets when helpful.
+- Ask for missing inputs before proceeding if requirements are unclear.
+```
+
+### Guardrails (defaults + workflow)
+```yaml
+# guardrails/default_guardrails.yaml
+allowed_categories:
+  - policy
+  - privacy
+  - citations
+  - constraints
+apply_sets:
+  - platform_defaults
+sets:
+  - name: platform_defaults
+    description: "Baseline platform guardrails."
+    rules:
+      - name: pii_redaction
+        categories: ["privacy"]
+        applies_to: ["output"]
+        mode: redact
+        severity: critical
+        priority: 5
+        patterns:
+          - "(?i)(ssn|social security|credit card)"
+```
+
+```yaml
+# guardrails/workflow.md (referenced in workflow YAML)
+# Document workflow-specific rationale and examples here.
+```
+
+> **Tip**: Keep prompts and guardrails in the same folders referenced by your workflow YAML so validation succeeds, and use `${ENV_VAR}` placeholders for any secrets in YAML.
+
+**Glossary**
+- **Cookiecutter**: tool that asks prompts and generates a project folder from this template.
+- **Poetry**: dependency and packaging manager used by the generated project.
+- **pre-commit**: git hook manager (not preconfigured—add if you need automated formatting/checks).
+- **MCP (Model Context Protocol)**: standard for exposing tools/resources to LLMs; configured via `config/mcp_connectors.yaml`.
+- **RAG (Retrieval-Augmented Generation)**: pattern combining retrieval (embeddings/vector store) with generation.
+- **Guardrails**: safety/policy rules enforced on inputs/outputs/tool calls, defined in YAML/Markdown.
+- **A2A protocol**: agent-to-agent messaging scaffold in `protocols/a2a_protocol.py`.
+
 ## 11. Appendix
 
 **Glossary**
