@@ -194,3 +194,38 @@ def test_unknown_default_kb_raises(tmp_path: Path):
     spec_path.write_text(yaml.safe_dump(data))
     with pytest.raises(SpecValidationError):
         WorkflowSpecLoader(str(spec_path)).load()
+
+
+def test_vector_store_requires_backend_config(tmp_path: Path):
+    spec_path = _write_basic_files(tmp_path)
+    data = yaml.safe_load(spec_path.read_text())
+    data["storage"]["vector_store"]["backend"] = "azure_ai_search"
+    data["storage"]["vector_store"].pop("azure_ai_search", None)
+    spec_path.write_text(yaml.safe_dump(data))
+    with pytest.raises(SpecValidationError):
+        WorkflowSpecLoader(str(spec_path)).load()
+
+
+def test_vector_store_faiss_requires_index(tmp_path: Path):
+    spec_path = _write_basic_files(tmp_path)
+    data = yaml.safe_load(spec_path.read_text())
+    data["storage"]["vector_store"]["backend"] = "faiss"
+    data["storage"]["vector_store"].pop("path", None)
+    data["storage"]["vector_store"].pop("faiss", None)
+    spec_path.write_text(yaml.safe_dump(data))
+    with pytest.raises(SpecValidationError):
+        WorkflowSpecLoader(str(spec_path)).load()
+
+
+def test_vector_store_azure_msi_mutual_exclusion(tmp_path: Path):
+    spec_path = _write_basic_files(tmp_path)
+    data = yaml.safe_load(spec_path.read_text())
+    data["storage"]["vector_store"]["backend"] = "azure_ai_search"
+    data["storage"]["vector_store"]["azure_ai_search"] = {
+        "endpoint": "https://search.example.com",
+        "index_name": "idx",
+        "auth": {"use_msi": True, "api_key_env": "${API_KEY}"},
+    }
+    spec_path.write_text(yaml.safe_dump(data))
+    with pytest.raises(SpecValidationError):
+        WorkflowSpecLoader(str(spec_path)).load()
