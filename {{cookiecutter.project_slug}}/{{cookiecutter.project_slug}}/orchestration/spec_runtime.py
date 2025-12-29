@@ -30,6 +30,7 @@ class SpecRuntime:
         self.base_dir = base_dir
         self.telemetry = self._build_telemetry()
         self.retriever = Retriever(top_k=self.spec.rag.top_k)
+        self.kb_lookup = {kb.name: kb.collection for kb in self.spec.rag.knowledge_bases}
         self._index_contexts()
 
     @classmethod
@@ -140,6 +141,18 @@ class SpecRuntime:
             return
         docs: List[str] = []
         metadata: List[Dict[str, str]] = []
+        for kb in self.spec.rag.knowledge_bases:
+            for context_file in kb.contexts:
+                context_path = (self.base_dir / context_file).resolve()
+                if not context_path.exists():
+                    continue
+                text = context_path.read_text()
+                for chunk in self._chunk_text(text, self.spec.rag.chunking.size, self.spec.rag.chunking.overlap):
+                    docs.append(chunk)
+                    metadata.append({"knowledge_base": kb.name, "source": str(context_file)})
+            if docs:
+                self.retriever.add_texts(docs, metadatas=metadata, index=kb.collection)
+                docs, metadata = [], []
         for agent in self.spec.agents:
             if not agent.context_file:
                 continue
@@ -149,9 +162,15 @@ class SpecRuntime:
             text = context_path.read_text()
             for chunk in self._chunk_text(text, self.spec.rag.chunking.size, self.spec.rag.chunking.overlap):
                 docs.append(chunk)
-                metadata.append({"agent": agent.name, "source": str(agent.context_file)})
+                metadata.append(
+                    {
+                        "agent": agent.name,
+                        "source": str(agent.context_file),
+                        "knowledge_base": f"agent::{agent.name}",
+                    }
+                )
         if docs:
-            self.retriever.add_texts(docs, metadatas=metadata)
+            self.retriever.add_texts(docs, metadatas=metadata, index="agent_contexts")
 
     @staticmethod
     def _chunk_text(text: str, size: int, overlap: int) -> List[str]:
@@ -168,11 +187,22 @@ class SpecRuntime:
     def _apply_rag(self, query: str) -> str:
         if not self.spec.rag.enabled:
             return query
-        results = self.retriever.retrieve(query)
+        target_indexes = None
+        if self.spec.rag.default_knowledge_bases:
+            target_indexes = [self.kb_lookup.get(name, name) for name in self.spec.rag.default_knowledge_bases]
+        elif self.kb_lookup:
+            target_indexes = list(self.kb_lookup.values())
+
+        if target_indexes:
+            target_indexes = [idx for idx in target_indexes if idx]
+
+        results = self.retriever.retrieve(query, indexes=target_indexes, top_k=self.spec.rag.top_k)
         if not results:
             return query
         formatted = "\n".join(
-            f"- ({hit.get('score', 0):.2f}) {hit.get('text','')}" for hit in results
+            f"- ({hit.get('score', 0):.2f}) [{hit.get('metadata', {}).get('knowledge_base', 'kb')}] "
+            f"{hit.get('text','')}"
+            for hit in results
         )
         return f"{query}\n\nContext:\n{formatted}"
 

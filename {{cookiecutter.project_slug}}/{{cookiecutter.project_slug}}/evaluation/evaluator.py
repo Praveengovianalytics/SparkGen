@@ -26,9 +26,11 @@ class RAGEvaluator:
 
     def _index_corpus(self) -> None:
         corpus = [item["context"] for item in self.dataset if "context" in item]
-        metadatas = [{"source": item.get("source", f"doc-{idx}")} for idx, item in enumerate(self.dataset)]
+        metadatas = [{"source": item.get("source", f"doc-{idx}"), "knowledge_base": item.get("knowledge_base")} for idx, item in enumerate(self.dataset)]
         if corpus:
-            self.retriever.add_texts(corpus, metadatas=metadatas)
+            indexes = [item.get("knowledge_base") or "default" for item in self.dataset if "context" in item]
+            for text, meta, index in zip(corpus, metadatas, indexes):
+                self.retriever.add_texts([text], metadatas=[meta], index=index)
 
     def evaluate(self) -> List[Dict]:
         """
@@ -38,7 +40,9 @@ class RAGEvaluator:
         for item in self.dataset:
             query = item.get("query", "")
             expected = item.get("expected_answer", "")
-            retrieved = self.retriever.retrieve(query)
+            kb = item.get("knowledge_base")
+            indexes = [kb] if kb else None
+            retrieved = self.retriever.retrieve(query, indexes=indexes)
             top_text = retrieved[0]["text"] if retrieved else ""
             passed = expected.lower() in top_text.lower()
             results.append(

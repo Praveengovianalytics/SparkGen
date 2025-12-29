@@ -13,32 +13,43 @@ class InMemoryVectorStore:
 
     def __init__(self, embedder: Optional[Embedder] = None) -> None:
         self.embedder = embedder or Embedder()
-        self._vectors: List[np.ndarray] = []
-        self._documents: List[str] = []
-        self._metadatas: List[Dict] = []
+        self._stores: Dict[str, Dict[str, List]] = {}
+
+    def _get_store(self, index: str) -> Dict[str, List]:
+        """Return a named index store, creating it if needed."""
+
+        if index not in self._stores:
+            self._stores[index] = {"vectors": [], "documents": [], "metadatas": []}
+        return self._stores[index]
 
     def add_documents(
-        self, documents: List[str], metadatas: Optional[List[Dict]] = None
+        self, documents: List[str], metadatas: Optional[List[Dict]] = None, index: str = "default"
     ) -> None:
         """
-        Add documents and optional metadata to the store.
+        Add documents and optional metadata to a named index.
         """
+
         metadatas = metadatas or [{} for _ in documents]
         if len(metadatas) != len(documents):
             raise ValueError("metadatas length must match documents length.")
 
         embeddings = self.embedder.embed_documents(documents)
+        store = self._get_store(index)
         for doc, metadata, embedding in zip(documents, metadatas, embeddings):
-            self._documents.append(doc)
-            self._metadatas.append(metadata)
-            self._vectors.append(np.array(embedding, dtype=np.float32))
+            metadata_with_index = dict(metadata)
+            metadata_with_index.setdefault("index", index)
+            store["documents"].append(doc)
+            store["metadatas"].append(metadata_with_index)
+            store["vectors"].append(np.array(embedding, dtype=np.float32))
 
-    def _similarity(self, query_vector: np.ndarray) -> List[Tuple[int, float]]:
+    @staticmethod
+    def _similarity(query_vector: np.ndarray, vectors: List[np.ndarray]) -> List[Tuple[int, float]]:
         """
         Compute cosine similarity between the query vector and stored vectors.
         """
+
         similarities: List[Tuple[int, float]] = []
-        for idx, vector in enumerate(self._vectors):
+        for idx, vector in enumerate(vectors):
             denom = np.linalg.norm(vector) * np.linalg.norm(query_vector)
             if denom == 0:
                 score = 0.0
@@ -47,31 +58,36 @@ class InMemoryVectorStore:
             similarities.append((idx, score))
         return similarities
 
-    def search(self, query: str, top_k: int = 3) -> List[Dict]:
+    def search(self, query: str, top_k: int = 3, indexes: Optional[List[str]] = None) -> List[Dict]:
         """
-        Search for the top_k most similar documents to the query.
+        Search for the top_k most similar documents across one or more indexes.
         """
+
         query_vector = np.array(self.embedder.embed(query), dtype=np.float32)
-        if not self._vectors:
+        if not self._stores:
             return []
 
-        similarities = self._similarity(query_vector)
-        ranked = sorted(similarities, key=lambda pair: pair[1], reverse=True)[:top_k]
+        target_indexes = indexes or list(self._stores.keys())
         results = []
-        for idx, score in ranked:
-            results.append(
-                {
-                    "text": self._documents[idx],
-                    "metadata": self._metadatas[idx],
-                    "score": score,
-                }
-            )
-        return results
+        for index in target_indexes:
+            store = self._stores.get(index)
+            if not store:
+                continue
+            similarities = self._similarity(query_vector, store["vectors"])
+            for idx, score in similarities:
+                results.append(
+                    {
+                        "text": store["documents"][idx],
+                        "metadata": store["metadatas"][idx],
+                        "score": score,
+                    }
+                )
+        ranked = sorted(results, key=lambda item: item["score"], reverse=True)[:top_k]
+        return ranked
 
     def reset(self) -> None:
         """
         Clear all stored vectors and documents.
         """
-        self._vectors = []
-        self._documents = []
-        self._metadatas = []
+
+        self._stores = {}

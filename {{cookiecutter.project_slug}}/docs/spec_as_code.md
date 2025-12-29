@@ -25,7 +25,7 @@
 - `name`, `description`: identifiers for the workflow.
 - `entry_agent`: name of the first agent to run.
 - `environment`: selected environment key (`dev/staging/prod`).
-- `rag`: `enabled`, `retriever (in_memory|stub)`, `top_k`, `embedding_model`, `chunking.size|overlap|strategy`, `reranker.enabled|provider|top_n`, `citations`, `collection`.
+- `rag`: `enabled`, `retriever (in_memory|stub)`, `top_k`, `embedding_model`, `chunking.size|overlap|strategy`, `reranker.enabled|provider|top_n`, `citations`, `collection`, `knowledge_bases[] (name|description|collection|contexts[])`, `default_knowledge_bases[]` to limit retrieval to specific KBs.
 - `storage`: `vector_store.backend|collection|credentials`, `document_store.backend|path|credentials`, `memory_store_path`.
 - `memory`: `short_term.store|ttl_messages|null|summarization_policy`, `long_term.store|ttl_messages|null|summarization_policy`.
 - `tools`: `builtin` tool names, `mcp_connectors[]` (`name`, `host`, `port`, `protocol`, `active`, `credentials ${ENV}`, `tools[]` with `name`, `resource`, `description`, `active`, `rate_limit_per_minute`), `exposed_mcp_tools` to allowlist MCP tools by name.
@@ -37,7 +37,7 @@
 - `environments`: map of environment keys to partial overrides for `rag`, `storage`, `memory`, `tools`, `observability`, or `llm`.
 
 3. **Example `workflow.yaml`**
-- Full example lives at `config/workflow.example.yaml` (mirrors the template under `config/templates/rag_agentic/workflow.yaml`). It wires RAG chunking/reranker, MCP calculator, two agents, handoff rules, memory policies, storage backends, environment overrides, and observability.
+- Full example lives at `config/workflow.example.yaml` (mirrors the template under `config/templates/rag_agentic/workflow.yaml`). It wires RAG chunking/reranker, MCP calculator, two agents, handoff rules, memory policies, storage backends, environment overrides, observability, and named knowledge bases (`product_docs`, `responsible_ai`).
 
 4. **Example `.md` prompt/context files**
 - Agent prompts: `prompts/researcher.md`, `prompts/coder.md`.

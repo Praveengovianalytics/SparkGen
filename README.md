@@ -164,6 +164,7 @@ Every Cookiecutter prompt is listed below. Defaults shown in brackets.
 - **Docs**: `docs/` holds specs and playbooks for orchestration and operations.
 - **MCP tools**: configurable via `config/mcp_connectors.yaml` and surfaced to agents.
 - **Memory/Vector store**: in-memory defaults with configuration in `workflow.example.yaml`.
+- **Knowledge bases**: declare named KBs in `config/knowledge_bases.example.yaml` and mirror them under `rag.knowledge_bases` in workflow YAML so prompts can cite KB tags (e.g., `product_docs`, `responsible_ai`).
 
 ---
 
@@ -175,7 +176,7 @@ After generation your project looks like this (top-level only):
 <project_slug>/
 ├── .github/workflows/          # CI/CD stubs (adjust per selected tool)
 ├── ci_cd/                      # Docker, Compose, K8s manifests
-├── config/                     # Spec-as-Code example + MCP config
+├── config/                     # Spec-as-Code example + MCP + KB config
 ├── contexts/                   # Context blocks referenced by workflows
 ├── docs/                       # Specs (orchestration, operations, testing)
 ├── guardrails/                 # Default rules + docs

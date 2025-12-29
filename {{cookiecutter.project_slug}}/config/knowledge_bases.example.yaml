@@ -1,0 +1,11 @@
+knowledge_bases:
+  - name: product_docs
+    description: "Product documentation and workflow wiring references."
+    collection: product_docs
+    contexts:
+      - ../contexts/product.md
+  - name: responsible_ai
+    description: "Guardrails, safety, and compliance notes."
+    collection: rai_policies
+    contexts:
+      - ../contexts/responsible_ai.md

@@ -8,6 +8,7 @@ skills, and agent collaboration patterns generated from this template.
 - Encourage modular **skills** that map to tools, MCP resources, or A2A
   interactions.
 - Make it easy to swap between single-agent and multi-agent configurations.
+- Declare knowledge bases by name so prompts can reference them explicitly.
 
 ## Core Specs
 1. **Context Model**
@@ -22,16 +23,20 @@ skills, and agent collaboration patterns generated from this template.
    - The template includes demo MCP skills (`demo.calculator`, `demo.datetime`,
      `demo.local_terminal`) to accelerate local testing—swap or disable them for
      production.
+3. **Knowledge Bases**
+   - Maintain a KB registry (e.g., `config/knowledge_bases.example.yaml`) with `name`, `collection`, `description`, and `contexts[]`.
+   - Reference KB names in prompts (e.g., `product_docs`, `responsible_ai`) so retrieval context is explicit.
+   - Keep contexts short and chunk-friendly; cite KB names in responses.
 
-3. **Prompt Contracts**
+4. **Prompt Contracts**
    - Keep prompts declarative; store defaults in `prompt_template.py`.
    - Include tool exposure lists and guidance for tool selection.
 
-4. **Observability & Traces**
+5. **Observability & Traces**
    - Ensure telemetry spans tool use, A2A hops, and MCP lookups.
    - Configure MLflow/Langfuse keys via environment variables for reproducible runs.
 
-5. **Testing Matrix**
+6. **Testing Matrix**
    - Unit: agent routing (`tests/test_agent_flow.py`), A2A messaging,
      and MCP schema fetch stubs.
    - Integration: simulated end-to-end flow with router-manager and planner-builder.
