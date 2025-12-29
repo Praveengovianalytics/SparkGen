@@ -165,6 +165,7 @@ Every Cookiecutter prompt is listed below. Defaults shown in brackets.
 - **MCP tools**: configurable via `config/mcp_connectors.yaml` and surfaced to agents.
 - **Memory/Vector store**: in-memory defaults with configuration in `workflow.example.yaml`.
 - **Knowledge bases**: declare named KBs in `config/knowledge_bases.example.yaml` and mirror them under `rag.knowledge_bases` in workflow YAML so prompts can cite KB tags (e.g., `product_docs`, `responsible_ai`).
+- **Channel delivery**: `channel/` clients and `config/channels.example.yaml` make Slack, Teams, Telegram, and WhatsApp webhooks configurable for broadcasting agent replies.
 
 ---
 
@@ -178,6 +179,7 @@ After generation your project looks like this (top-level only):
 ├── ci_cd/                      # Docker, Compose, K8s manifests
 ├── config/                     # Spec-as-Code example + MCP + KB config
 ├── contexts/                   # Context blocks referenced by workflows
+├── channel/                    # Channel connectors (Slack, Teams, Telegram, WhatsApp)
 ├── docs/                       # Specs (orchestration, operations, testing)
 ├── guardrails/                 # Default rules + docs
 ├── prompts/                    # Agent prompt markdown
@@ -194,6 +196,7 @@ Key package modules:
 - `{{project_slug}}/config/`: Config loader, Spec-as-Code models/loader/templates.
 - `{{project_slug}}/guardrails/`: Rule definitions, resolver, guardrail manager.
 - `{{project_slug}}/connectors/`: MCP client stub + tool generation.
+- `{{project_slug}}/channel/`: Config loader and outbound connectors for Slack/Teams/Telegram/WhatsApp.
 - `{{project_slug}}/retrievers`, `embeddings`, `vectordatabase`: RAG building blocks.
 - `{{project_slug}}/telemetry/`: Telemetry hooks, MLflow/Langfuse optional wiring.
 - `{{project_slug}}/tools/`: Built-in tools plus MCP-derived tool registry.
@@ -225,6 +228,9 @@ Key package modules:
 │   └── agents/               # Agent-specific guardrail docs (optional)
 ├── connectors/
 │   └── mcp_client.py         # MCP gateway/tool loader, demo resources, tool spec builder
+├── channel/
+│   ├── config.py             # Channel config loader and env resolver
+│   └── connectors.py         # Slack/Teams/Telegram/WhatsApp webhook clients
 ├── tools/
 │   └── tools.py              # Built-in tools + MCP assembly helper
 ├── prompt/
@@ -302,6 +308,7 @@ Supported environment variables (load from `.env` thanks to `python-dotenv`):
 - Telemetry: `TELEMETRY_ENDPOINT`, `MLFLOW_TRACKING_URI`, `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`
 - Guardrails: `GUARDRAIL_BANNED_TERMS`, `GUARDRAIL_MAX_OUTPUT_LEN`
 - MCP config path override: `MCP_CONFIG_PATH`
+- Channel config path override: `CHANNEL_CONFIG_PATH`
 
 Example `.env`:
 ```
@@ -313,6 +320,7 @@ OBSERVABILITY=OpenTelemetry-ready
 LANGFUSE_HOST=https://cloud.langfuse.com
 LANGFUSE_PUBLIC_KEY=...
 LANGFUSE_SECRET_KEY=...
+CHANNEL_CONFIG_PATH=./config/channels.example.yaml
 ```
 
 ### 7.2 Workflow overrides (dev/staging/prod)
@@ -322,6 +330,11 @@ LANGFUSE_SECRET_KEY=...
 ### 7.3 Secrets guidance
 - Keep secrets out of git: reference them as `${ENV_VAR}` in `workflow.yaml` and `config/mcp_connectors.yaml`.
 - Do not commit `.env`; use vaults/secret managers for shared environments.
+
+### 7.4 Channel configuration and usage
+- Define Slack/Teams/Telegram/WhatsApp endpoints in `config/channels.example.yaml` (or your own file) with `${ENV_VAR}` placeholders for sensitive values.
+- Override the path via `CHANNEL_CONFIG_PATH` to point at a team-managed secrets location.
+- Call `/agent/invoke` with a `channel` value to broadcast agent responses to that destination; delivery metadata is returned alongside the agent result.
 
 ---
 

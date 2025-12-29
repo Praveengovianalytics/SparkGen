@@ -8,6 +8,7 @@ builder functions to wire your own tools, storage, or routing logic.
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 
 from {{ cookiecutter.project_slug }}.agents.agent import Agent, RouterManager
 from {{ cookiecutter.project_slug }}.config.config_loader import ConfigLoader
@@ -24,6 +25,7 @@ app = FastAPI(title="{{ cookiecutter.project_name }} Agent API")
 class InvokeRequest(BaseModel):
     query: str
     pattern: str = "single-agent"
+    channel: Optional[str] = None
 
 
 def build_single_agent(config):
@@ -112,9 +114,18 @@ def health():
 @app.post("/agent/invoke")
 def invoke(req: InvokeRequest):
     config = ConfigLoader().load_config()
+    channels = config.get("channel_clients", {})
     pattern = build_pattern(req.pattern, config)
     if isinstance(pattern, Agent):
         result = pattern.execute(req.query)
     else:
         result = pattern.run(req.query)  # type: ignore[attr-defined]
-    return {"pattern": req.pattern, "result": result}
+    delivery = None
+    if req.channel:
+        client = channels.get(req.channel)
+        if not client:
+            raise HTTPException(status_code=400, detail=f"Unknown channel: {req.channel}")
+        delivery = client.send_message(str(result))
+        if not delivery.get("ok"):
+            raise HTTPException(status_code=502, detail=f"Channel delivery failed: {delivery}")
+    return {"pattern": req.pattern, "result": result, "channel_delivery": delivery}
