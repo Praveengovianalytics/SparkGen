@@ -56,7 +56,10 @@ class WorkflowSpecLoader:
             key: WorkflowOverrides.model_validate(value).model_dump(exclude_none=True)
             for key, value in (raw.get("environments") or {}).items()
         }
-        spec = WorkflowSpec.model_validate(merged_payload)
+        try:
+            spec = WorkflowSpec.model_validate(merged_payload)
+        except Exception as exc:  # noqa: BLE001 - surface validation errors consistently
+            raise SpecValidationError(str(exc)) from exc
         self._validate_prompts_and_context(spec)
         self._validate_tool_references(spec)
         self._validate_handoffs(spec)
@@ -73,6 +76,11 @@ class WorkflowSpecLoader:
                 context_path = (self.base_dir / agent.context_file).resolve()
                 if not context_path.exists():
                     missing.append(agent.context_file)
+        for kb in spec.rag.knowledge_bases:
+            for context_file in kb.contexts:
+                kb_context_path = (self.base_dir / context_file).resolve()
+                if not kb_context_path.exists():
+                    missing.append(context_file)
         if missing:
             raise SpecValidationError(f"Prompt/context files missing: {', '.join(sorted(set(missing)))}")
 

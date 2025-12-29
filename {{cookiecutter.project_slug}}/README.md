@@ -72,6 +72,11 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
    `single-agent`, `router-manager`, `sequential`, `planner-executor`,
    `hierarchical`, `broadcast-reduce`, `critic-review`, `tool-first`.
 
+## 🧠 Knowledge Bases & Contexts
+- Define knowledge bases in `config/knowledge_bases.example.yaml` (or copy it to your own file) using `name`, `collection`, and `contexts[]`.
+- Reference those names under `rag.knowledge_bases` and `rag.default_knowledge_bases` in `config/workflow.example.yaml` to drive retrieval and prompt grounding.
+- Keep prompts and contexts explicit about which KB they rely on (e.g., `product_docs`, `responsible_ai`) to make RAG outputs auditable.
+
 ## 🔌 Configuring MCP gateways & tools
 1. Declare gateways and tools in `config/mcp_connectors.yaml`. Use `${ENV_VAR}`
    placeholders for credentials so secrets stay out of version control.

@@ -1,0 +1,11 @@
+knowledge_bases:
+  - name: product_docs
+    description: "Product documentation and orchestration patterns."
+    collection: product_docs
+    contexts:
+      - contexts/product_context.md
+  - name: responsible_ai
+    description: "Guardrails, safety, and compliance notes."
+    collection: rai_policies
+    contexts:
+      - contexts/responsible_ai.md

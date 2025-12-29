@@ -34,6 +34,20 @@ class RerankerConfig(BaseModel):
     top_n: int = 3
 
 
+class KnowledgeBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    collection: str
+    contexts: List[str] = Field(default_factory=list)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Knowledge base name cannot be empty.")
+        return value
+
+
 class RAGConfig(BaseModel):
     enabled: bool = True
     retriever: Literal["in_memory", "stub"] = "in_memory"
@@ -43,6 +57,8 @@ class RAGConfig(BaseModel):
     reranker: Optional[RerankerConfig] = None
     citations: bool = True
     collection: str = "sparkgen"
+    knowledge_bases: List[KnowledgeBase] = Field(default_factory=list)
+    default_knowledge_bases: Optional[List[str]] = None
 
 
 class MemoryWindow(BaseModel):
@@ -265,6 +281,14 @@ class WorkflowSpec(BaseModel):
             raise ValueError(f"entry_agent '{self.entry_agent}' is not defined in agents.")
         if len(agent_names) != len(self.agents):
             raise ValueError("Agent names must be unique.")
+
+        kb_names = [kb.name for kb in self.rag.knowledge_bases]
+        if len(kb_names) != len(set(kb_names)):
+            raise ValueError("Knowledge base names must be unique.")
+        if self.rag.default_knowledge_bases:
+            unknown_kbs = set(self.rag.default_knowledge_bases) - set(kb_names)
+            if unknown_kbs:
+                raise ValueError(f"default_knowledge_bases references unknown KBs: {', '.join(sorted(unknown_kbs))}")
 
         if self.tools.builtin and "get_delivery_date" not in self.tools.builtin:
             self.tools.builtin.append("get_delivery_date")

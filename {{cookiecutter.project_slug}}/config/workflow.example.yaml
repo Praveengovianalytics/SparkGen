@@ -19,6 +19,20 @@ rag:
     top_n: 2
   citations: true
   collection: starter_docs
+  knowledge_bases:
+    - name: product_docs
+      description: "Product and orchestration docs used for most answers."
+      collection: product_docs
+      contexts:
+        - ../contexts/product.md
+    - name: responsible_ai
+      description: "Safety, compliance, and policy notes to keep answers aligned."
+      collection: rai_policies
+      contexts:
+        - ../contexts/responsible_ai.md
+  default_knowledge_bases:
+    - product_docs
+    - responsible_ai
 
 storage:
   vector_store:

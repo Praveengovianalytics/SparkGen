@@ -159,3 +159,38 @@ def test_circular_handoff_detection(tmp_path: Path):
     spec_path.write_text(yaml.safe_dump(data))
     with pytest.raises(SpecValidationError):
         WorkflowSpecLoader(str(spec_path)).load()
+
+
+def test_missing_kb_context_raises(tmp_path: Path):
+    spec_path = _write_basic_files(tmp_path)
+    data = yaml.safe_load(spec_path.read_text())
+    data["rag"]["enabled"] = True
+    data["rag"]["knowledge_bases"] = [
+        {
+            "name": "kb1",
+            "description": "test kb",
+            "collection": "kb1_collection",
+            "contexts": ["contexts/missing.md"],
+        }
+    ]
+    spec_path.write_text(yaml.safe_dump(data))
+    with pytest.raises(SpecValidationError):
+        WorkflowSpecLoader(str(spec_path)).load()
+
+
+def test_unknown_default_kb_raises(tmp_path: Path):
+    spec_path = _write_basic_files(tmp_path)
+    data = yaml.safe_load(spec_path.read_text())
+    data["rag"]["enabled"] = True
+    data["rag"]["knowledge_bases"] = [
+        {
+            "name": "kb1",
+            "description": "test kb",
+            "collection": "kb1_collection",
+            "contexts": [data["agents"][0]["context_file"]],
+        }
+    ]
+    data["rag"]["default_knowledge_bases"] = ["kb1", "missing_kb"]
+    spec_path.write_text(yaml.safe_dump(data))
+    with pytest.raises(SpecValidationError):
+        WorkflowSpecLoader(str(spec_path)).load()

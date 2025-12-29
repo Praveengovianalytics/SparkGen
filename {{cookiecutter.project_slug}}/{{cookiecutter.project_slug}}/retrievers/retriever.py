@@ -19,15 +19,15 @@ class Retriever:
         self.top_k = top_k
 
     def add_texts(
-        self, texts: List[str], metadatas: Optional[List[Dict]] = None
+        self, texts: List[str], metadatas: Optional[List[Dict]] = None, index: str = "default"
     ) -> None:
         """
         Index a batch of texts with optional metadata.
         """
-        self.vector_store.add_documents(texts, metadatas)
+        self.vector_store.add_documents(texts, metadatas, index=index)
 
-    def retrieve(self, query: str) -> List[Dict]:
+    def retrieve(self, query: str, indexes: Optional[List[str]] = None, top_k: Optional[int] = None) -> List[Dict]:
         """
         Return the most relevant documents for a query.
         """
-        return self.vector_store.search(query, top_k=self.top_k)
+        return self.vector_store.search(query, top_k=top_k or self.top_k, indexes=indexes)
