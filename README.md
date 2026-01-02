@@ -126,7 +126,7 @@ Every Cookiecutter prompt is listed below. Defaults shown in brackets.
 | `description` | Short project description. | Any string. |
 | `version` | Initial package version. | SemVer (default `0.1.0`). |
 | `open_source_license` | LICENSE content. | `MIT` (default), `BSD-3-Clause`, `No license file`. |
-| `ci_cd_tool` | CI/CD placeholder files. | `GitHub Actions` (default), `GitLab CI/CD`, `Jenkins`, `None`. |
+| `ci_cd_tool` | CI/CD placeholder files. | `GitHub Actions` (default), `GitLab CI/CD`, `Jenkins`, `Bamboo`, `None`. |
 | `deployment_platform` | Deployment hints in docs/stubs. | `Docker` (default), `Kubernetes`, `AWS`, `Azure`, `GCP`, `None`. |
 | `multi_agent_mode` | Default orchestration mode. | `router-manager` (default), `planner-builder`, `single-agent`. |
 | `api_framework` | Whether to scaffold FastAPI. | `FastAPI` (default), `None`. |
@@ -340,9 +340,10 @@ CHANNEL_CONFIG_PATH=./config/channels.example.yaml
 
 ## 8. CI/CD
 
-- **Included pipelines**: `.github/workflows/ci.yml` and `cd.yml` are stubs—fill them with your jobs. Other CI choices (GitLab/Jenkins) are placeholders you can adapt.
+- **Included pipelines**: `.github/workflows/ci.yml` and `cd.yml` are stubs—fill them with your jobs. Other CI choices (GitLab/Jenkins/Bamboo) are placeholders you can adapt.
 - **Local parity**: run `poetry run pytest` locally; add lint/format commands to match your CI as you extend it.
 - **Adding jobs**: edit the workflow YAMLs or create new ones under `.github/workflows/`. Reference `ci_cd/Dockerfile` or `ci_cd/docker-compose.yml` for build steps, and `ci_cd/deployment/kubernetes.yml` for K8s deploy examples.
+- **Bamboo template + Azure Event Hub logging**: a Bamboo YAML spec lives at `ci_cd/bamboo/bamboo-spec.yaml`. It installs dependencies, runs tests, and forwards the captured log file to Azure Event Hub using `ci_cd/bamboo/push_eventhub_logs.py`. Configure `AZURE_EVENTHUB_CONNECTION_STRING` and `AZURE_EVENTHUB_NAME` in Bamboo to enable log forwarding.
 
 ---
 

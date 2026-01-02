@@ -1,0 +1,48 @@
+version: 2
+
+plan:
+  project-key: "{{ cookiecutter.project_slug.upper().replace('_', '-') }}"
+  key: "{{ cookiecutter.project_slug.upper().replace('_', '-') }}-CI"
+  name: "{{ cookiecutter.project_name }} Bamboo CI"
+
+variables:
+  bamboo_log_path: "bamboo_logs/test.log"
+
+stages:
+  - Build and Test:
+      jobs:
+        - Build
+
+jobs:
+  - job: Build
+    key: BUILD
+    tasks:
+      - checkout
+      - script:
+          interpreter: BINSH_OR_CMDEXE
+          description: "Set up Python environment for {{ cookiecutter.project_name }}"
+          scripts:
+            - "python -m venv .venv"
+            - "source .venv/bin/activate"
+            - "pip install --upgrade pip"
+            - "pip install poetry"
+            - "poetry install --with dev"
+      - script:
+          interpreter: BINSH_OR_CMDEXE
+          description: "Run tests and capture logs for Azure Event Hub"
+          scripts:
+            - "source .venv/bin/activate"
+            - "mkdir -p bamboo_logs"
+            - "poetry run pytest -q 2>&1 | tee ${bamboo_log_path}"
+      - script:
+          interpreter: BINSH_OR_CMDEXE
+          description: "Push Bamboo logs to Azure Event Hub"
+          scripts:
+            - "source .venv/bin/activate"
+            - "python ci_cd/bamboo/push_eventhub_logs.py --log-file ${bamboo_log_path}"
+    final-tasks:
+      - script:
+          interpreter: BINSH_OR_CMDEXE
+          description: "Cleanup Python environment"
+          scripts:
+            - "rm -rf .venv"
