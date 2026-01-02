@@ -86,9 +86,12 @@ cd ..
 
 # Create ci_cd directory and its subdirectories and files
 mkdir -p ci_cd/deployment/helm-chart
+mkdir -p ci_cd/bamboo
 touch ci_cd/Dockerfile
 touch ci_cd/docker-compose.yml
 touch ci_cd/deployment/kubernetes.yml
+touch ci_cd/bamboo/bamboo-spec.yaml
+touch ci_cd/bamboo/push_eventhub_logs.py
 
 # Create logs and tests directories, and test_sample.py
 mkdir logs

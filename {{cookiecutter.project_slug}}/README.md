@@ -67,10 +67,22 @@ OpenAI Agents SDK by setting `OPENAI_AGENT_SDK=enabled` (and providing
 5. Call the API:
    ```bash
    curl -X POST http://localhost:8000/agent/invoke -H "Content-Type: application/json" -d '{"query":"hello","pattern":"single-agent"}'
-   ```
+    ```
 6. Switch orchestration patterns by setting `pattern` to one of:
    `single-agent`, `router-manager`, `sequential`, `planner-executor`,
    `hierarchical`, `broadcast-reduce`, `critic-review`, `tool-first`.
+
+## 🔄 CI/CD: Bamboo with Azure Event Hub logging
+
+- A Bamboo YAML spec is available at `ci_cd/bamboo/bamboo-spec.yaml`. It provisions a Python virtual environment, runs `poetry install`, executes `pytest`, and captures the log output to `bamboo_logs/test.log`.
+- The step `python ci_cd/bamboo/push_eventhub_logs.py --log-file ${bamboo_log_path}` forwards the captured log file to Azure Event Hub. Provide credentials via environment variables:
+  - `AZURE_EVENTHUB_CONNECTION_STRING`
+  - `AZURE_EVENTHUB_NAME`
+- You can reuse the log forwarder locally by running:
+  ```bash
+  python ci_cd/bamboo/push_eventhub_logs.py --log-file bamboo_logs/test.log
+  ```
+  (Ensure the environment variables above are set or pass the connection flags explicitly.)
 
 ## 🧠 Knowledge Bases & Contexts
 - Define knowledge bases in `config/knowledge_bases.example.yaml` (or copy it to your own file) using `name`, `collection`, and `contexts[]`.

@@ -5,7 +5,7 @@
     "description": "A short description of the project.",
     "version": "0.1.0",
     "open_source_license": ["MIT", "BSD-3-Clause", "No license file"],
-    "ci_cd_tool": ["GitHub Actions", "GitLab CI/CD", "Jenkins", "None"],
+    "ci_cd_tool": ["GitHub Actions", "GitLab CI/CD", "Jenkins", "Bamboo", "None"],
     "deployment_platform": ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "None"],
     "multi_agent_mode": ["router-manager", "planner-builder", "single-agent"],
     "api_framework": ["FastAPI", "None"],
